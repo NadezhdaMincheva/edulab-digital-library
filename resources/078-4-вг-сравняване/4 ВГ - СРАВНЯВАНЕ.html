@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Математическа Битка - Звук и Цвят</title>
+    <style>
+        :root {
+            --p1-color: #2196F3;
+            --p2-color: #F44336;
+            --accent-red: #FF0000; /* Ярко червено за знака */
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            overflow: hidden; font-family: 'Arial Rounded MT Bold', 'Helvetica', sans-serif;
+            touch-action: none; background-color: #333;
+        }
+
+        #game-container { display: flex; height: 100vh; width: 100vw; }
+
+        .player-side {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: space-around;
+            padding: 20px; transition: background-color 0.2s;
+        }
+
+        .blue-side { background-color: #E3F2FD; border-right: 5px solid var(--p1-color); }
+        .red-side { background-color: #FFEBEE; border-left: 5px solid var(--p2-color); }
+
+        .score { font-size: 3.5rem; font-weight: bold; color: #333; }
+        .avatar { font-size: 7rem; }
+
+        .task-card {
+            background: white; padding: 40px; border-radius: 30px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+            font-size: 6rem; font-weight: bold; min-width: 280px;
+            text-align: center; display: flex; justify-content: center;
+            align-items: center; gap: 25px; user-select: none;
+        }
+
+        /* Стил за знака между цифрите */
+        .ans-slot {
+            display: inline-block; min-width: 80px; height: 100px;
+            color: var(--accent-red); /* Ярко червен цвят */
+            text-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 15px; width: 95%; max-width: 450px;
+        }
+
+        button {
+            font-size: 4rem; padding: 25px 0; border: none;
+            border-radius: 25px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 10px #bbb; touch-action: manipulation;
+            transition: all 0.05s;
+        }
+
+        button:active { transform: translateY(6px); box-shadow: 0 4px #888; }
+        
+        .btn-op { background-color: #fff; color: #333; }
+        .btn-clear { background-color: #ff5252; color: white; font-size: 3rem; }
+        .btn-confirm { background-color: #4CAF50; color: white; font-size: 3rem; }
+
+        #win-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 100; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+
+        #win-text { font-size: 5rem; font-weight: bold; margin-bottom: 40px; }
+        .restart-btn {
+            font-size: 3.5rem; padding: 30px 70px; background: #4CAF50;
+            color: white; border-radius: 60px; border: none; box-shadow: 0 12px #2E7D32;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- Играч 1 -->
+        <div class="player-side blue-side" id="p1-area">
+            <div class="score">Точки: <span id="p1-score">0</span></div>
+            <div class="avatar">🐶</div>
+            <div class="task-card">
+                <span id="p1-n1"></span> 
+                <span class="ans-slot" id="p1-ans">?</span> 
+                <span id="p1-n2"></span>
+            </div>
+            <div class="controls">
+                <button class="btn-op" onpointerdown="processAction(1, '<')">&lt;</button>
+                <button class="btn-op" onpointerdown="processAction(1, '=')">=</button>
+                <button class="btn-op" onpointerdown="processAction(1, '>')">&gt;</button>
+                <button class="btn-clear" onpointerdown="clearInput(1)">😲</button>
+                <button class="btn-confirm" onpointerdown="confirmAnswer(1)" style="grid-column: span 2;">😊</button>
+            </div>
+        </div>
+
+        <!-- Играч 2 -->
+        <div class="player-side red-side" id="p2-area">
+            <div class="score">Точки: <span id="p2-score">0</span></div>
+            <div class="avatar">🐱</div>
+            <div class="task-card">
+                <span id="p2-n1"></span> 
+                <span class="ans-slot" id="p2-ans">?</span> 
+                <span id="p2-n2"></span>
+            </div>
+            <div class="controls">
+                <button class="btn-op" onpointerdown="processAction(2, '<')">&lt;</button>
+                <button class="btn-op" onpointerdown="processAction(2, '=')">=</button>
+                <button class="btn-op" onpointerdown="processAction(2, '>')">&gt;</button>
+                <button class="btn-clear" onpointerdown="clearInput(2)">😲</button>
+                <button class="btn-confirm" onpointerdown="confirmAnswer(2)" style="grid-column: span 2;">😊</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-screen">
+        <div id="win-text"></div>
+        <button class="restart-btn" onpointerdown="location.reload()">НОВА ИГРА</button>
+    </div>
+
+    <script>
+        // Звуков двигател
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                // Весел "възходящ" звук
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            } else {
+                // Кратко "бип" за грешка
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            }
+        }
+
+        let scores = { 1: 0, 2: 0 };
+        let currentAnswers = { 1: '', 2: '' };
+        let problems = { 1: {}, 2: {} };
+
+        function generateProblem() {
+            const n1 = Math.floor(Math.random() * 11);
+            const n2 = Math.floor(Math.random() * 11);
+            const correct = (n1 < n2) ? '<' : (n1 > n2) ? '>' : '=';
+            return { n1, n2, correct };
+        }
+
+        function updateUI(p) {
+            document.getElementById(`p${p}-n1`).textContent = problems[p].n1;
+            document.getElementById(`p${p}-n2`).textContent = problems[p].n2;
+            document.getElementById(`p${p}-ans`).textContent = currentAnswers[p] || '?';
+            document.getElementById(`p${p}-score`).textContent = scores[p];
+        }
+
+        // Действие при натискане на знак - ЗВУКЪТ СЕ ВЪЗПРОИЗВЕЖДА ТУК
+        function processAction(p, op) {
+            currentAnswers[p] = op;
+            updateUI(p);
+            
+            // Проверка за звук веднага при появата на знака
+            if (op === problems[p].correct) {
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+        }
+
+        function clearInput(p) {
+            currentAnswers[p] = '';
+            updateUI(p);
+        }
+
+        function confirmAnswer(p) {
+            if (!currentAnswers[p]) return;
+
+            if (currentAnswers[p] === problems[p].correct) {
+                scores[p]++;
+                if (scores[p] >= 10) {
+                    document.getElementById('win-text').innerHTML = `ПОБЕДИТЕЛ:<br>${p === 1 ? '🐶 КУЧЕНЦЕТО' : '🐱 КОТЕНЦЕТО'}`;
+                    document.getElementById('win-screen').style.display = 'flex';
+                } else {
+                    problems[p] = generateProblem();
+                    currentAnswers[p] = '';
+                    updateUI(p);
+                }
+            } else {
+                // Визуално подсказване при грешно потвърждение
+                const area = document.getElementById(`p${p}-area`);
+                area.style.backgroundColor = '#ffcdd2';
+                setTimeout(() => { area.style.backgroundColor = p === 1 ? '#E3F2FD' : '#FFEBEE'; }, 300);
+                clearInput(p);
+            }
+        }
+
+        // Първоначално зареждане
+        problems[1] = generateProblem();
+        problems[2] = generateProblem();
+        updateUI(1);
+        updateUI(2);
+    </script>
+</body>
+</html>

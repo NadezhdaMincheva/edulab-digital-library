@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Великденска Математика със Звук</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f0fdf4; text-align: center; margin: 0; padding: 20px; touch-action: manipulation; }
+        #game-container { background: white; border-radius: 30px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); display: inline-block; width: 90%; max-width: 900px; border: 8px solid #ffeb3b; }
+        .egg { width: 70px; height: 95px; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%; display: inline-block; margin: 12px; border: 4px solid rgba(0,0,0,0.1); box-shadow: 4px 4px 10px rgba(0,0,0,0.1); position: relative; cursor: pointer; transition: 0.2s; }
+        .egg:active { transform: scale(0.9); }
+        .number-btn { width: 85px; height: 85px; font-size: 38px; margin: 8px; cursor: pointer; border-radius: 20px; border: none; background: #4caf50; color: white; box-shadow: 0 6px #2e7d32; transition: 0.1s; font-weight: bold; }
+        .number-btn:active { box-shadow: 0 2px #2e7d32; transform: translateY(4px); }
+        #message { font-size: 28px; margin-top: 25px; min-height: 40px; font-weight: bold; color: #555; }
+        #basket { min-height: 250px; padding: 30px; border: 6px solid #8d6e63; border-radius: 40px; margin-bottom: 25px; background: #fffde7; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; }
+        h1 { color: #2e7d32; font-size: 36px; margin-bottom: 10px; }
+        .instruction { font-size: 20px; color: #666; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>🥚 Великденско Броене 🐰</h1>
+    <div class="instruction">Докосни яйцата, за да ги преброиш, и натисни вярната цифра!</div>
+    <div id="basket"></div>
+    <div id="numbers"></div>
+    <div id="message"></div>
+</div>
+
+<script>
+    let count = 0;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Функция за генериране на звук
+    function playTone(freq, type, duration) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function soundSuccess() {
+        playTone(523.25, 'sine', 0.2); // До
+        setTimeout(() => playTone(659.25, 'sine', 0.2), 150); // Ми
+        setTimeout(() => playTone(783.99, 'sine', 0.4), 300); // Сол
+    }
+
+    function soundError() {
+        playTone(150, 'sawtooth', 0.5); // Ниско "бззз"
+    }
+
+    function soundClick() {
+        playTone(900, 'sine', 0.05); // Кратко "цък" при броене
+    }
+
+    function initGame() {
+        count = Math.floor(Math.random() * 10) + 1;
+        const basket = document.getElementById('basket');
+        basket.innerHTML = '';
+        document.getElementById('message').innerText = "";
+        
+        const colors = ['#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', '#A0C4FF', '#BDB2FF', '#FFC6FF'];
+
+        for (let i = 0; i < count; i++) {
+            const egg = document.createElement('div');
+            egg.className = 'egg';
+            egg.style.backgroundColor = colors[i % colors.length];
+            egg.onclick = () => {
+                egg.style.transform = "scale(1.2)";
+                setTimeout(() => egg.style.transform = "scale(1)", 100);
+                soundClick();
+            };
+            basket.appendChild(egg);
+        }
+    }
+
+    const numbersDiv = document.getElementById('numbers');
+    for (let i = 1; i <= 10; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'number-btn';
+        btn.innerText = i;
+        btn.onclick = () => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            checkAnswer(i);
+        };
+        numbersDiv.appendChild(btn);
+    }
+
+    function checkAnswer(num) {
+        const msg = document.getElementById('message');
+        if (num === count) {
+            msg.innerText = "БРАВО! 🎉";
+            msg.style.color = "#2e7d32";
+            soundSuccess();
+            setTimeout(initGame, 2500);
+        } else {
+            msg.innerText = "Опитай пак! 🧐";
+            msg.style.color = "#d32f2f";
+            soundError();
+        }
+    }
+
+    initGame();
+</script>
+
+</body>
+</html>

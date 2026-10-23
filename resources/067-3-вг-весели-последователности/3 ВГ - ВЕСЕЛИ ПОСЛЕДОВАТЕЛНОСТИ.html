@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Весели последователности</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, #fef08a, #fdba74);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .game-card {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        .title {
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            color: #9333ea;
+            margin-bottom: 20px;
+        }
+        
+        .subtitle {
+            font-size: 28px;
+            text-align: center;
+            color: #4b5563;
+            margin-bottom: 40px;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .menu-btn {
+            background: linear-gradient(to right, #ec4899, #a855f7);
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            padding: 40px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        
+        .menu-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .menu-btn.numbers {
+            background: linear-gradient(to right, #60a5fa, #06b6d4);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .home-btn {
+            background: #d1d5db;
+            color: #374151;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .home-btn:hover {
+            background: #9ca3af;
+        }
+        
+        .info {
+            font-size: 24px;
+            font-weight: bold;
+            color: #9333ea;
+        }
+        
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #16a34a;
+        }
+        
+        .question-title {
+            font-size: 36px;
+            font-weight: bold;
+            text-align: center;
+            color: #1f2937;
+            margin-bottom: 40px;
+        }
+        
+        .sequence-container {
+            background: #fef3c7;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .shape, .number {
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+        
+        .square {
+            width: 100px;
+            height: 100px;
+            background: #3b82f6;
+        }
+        
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 87px solid #22c55e;
+        }
+        
+        .number {
+            background: linear-gradient(to bottom right, #60a5fa, #a855f7);
+            border-radius: 20px;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .arrow {
+            font-size: 48px;
+            color: #6b7280;
+        }
+        
+        .question-mark {
+            width: 100px;
+            height: 100px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #9ca3af;
+        }
+        
+        .options-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .option-btn {
+            background: white;
+            border: 4px solid #c084fc;
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .option-btn:hover {
+            transform: scale(1.1);
+            border-color: #9333ea;
+        }
+        
+        .option-number {
+            background: linear-gradient(to bottom right, #34d399, #3b82f6);
+            border-radius: 20px;
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .feedback-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .feedback-box {
+            background: #4ade80;
+            border-radius: 30px;
+            padding: 60px;
+            text-align: center;
+            transform: scale(1.1);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .feedback-box.wrong {
+            background: #f87171;
+        }
+        
+        .feedback-emoji {
+            font-size: 100px;
+            margin-bottom: 20px;
+        }
+        
+        .feedback-text {
+            font-size: 60px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .complete-screen {
+            text-align: center;
+        }
+        
+        .complete-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .complete-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: #16a34a;
+            margin-bottom: 20px;
+        }
+        
+        .complete-message {
+            font-size: 28px;
+            color: #4b5563;
+            margin-bottom: 10px;
+        }
+        
+        .complete-score {
+            font-size: 36px;
+            font-weight: bold;
+            color: #9333ea;
+            margin-bottom: 40px;
+        }
+        
+        .complete-btn {
+            background: linear-gradient(to right, #4ade80, #3b82f6);
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            padding: 30px 60px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        
+        .complete-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="menuScreen" class="game-card">
+            <h1 class="title">🎯 Весели последователности 🎯</h1>
+            <p class="subtitle">Избери какво искаш да играеш:</p>
+            <div class="menu-buttons">
+                <button class="menu-btn" onclick="startGame('shapes')">🔷 Фигури</button>
+                <button class="menu-btn numbers" onclick="startGame('numbers')">🔢 Числа</button>
+            </div>
+        </div>
+        
+        <div id="gameScreen" class="game-card hidden">
+            <div class="header">
+                <button class="home-btn" onclick="goToMenu()">🏠 Меню</button>
+                <div class="info">Ниво: <span id="levelDisplay">1</span> / <span id="totalLevels">5</span></div>
+                <div class="score">⭐ Точки: <span id="scoreDisplay">0</span></div>
+            </div>
+            
+            <h2 class="question-title">Какво идва след това?</h2>
+            
+            <div class="sequence-container" id="sequenceContainer"></div>
+            
+            <div class="options-container" id="optionsContainer"></div>
+        </div>
+        
+        <div id="completeScreen" class="game-card hidden">
+            <div class="complete-screen">
+                <div class="complete-emoji">🎉</div>
+                <h2 class="complete-title">Браво!</h2>
+                <p class="complete-message">Завърши всички нива!</p>
+                <p class="complete-score">Точки: <span id="finalScore">0</span> / <span id="finalTotal">5</span></p>
+                <button class="complete-btn" onclick="goToMenu()">🏠 Обратно към менюто</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="feedbackOverlay" class="feedback-overlay hidden">
+        <div id="feedbackBox" class="feedback-box">
+            <div class="feedback-emoji" id="feedbackEmoji">🎉</div>
+            <h3 class="feedback-text" id="feedbackText">Браво!</h3>
+        </div>
+    </div>
+
+    <script>
+        let gameMode = '';
+        let currentLevel = 0;
+        let score = 0;
+        
+        const shapeLevels = [
+            { sequence: ['circle', 'square', 'circle', 'square'], answer: 'circle', options: ['circle', 'square', 'triangle'] },
+            { sequence: ['triangle', 'circle', 'triangle', 'circle'], answer: 'triangle', options: ['triangle', 'circle', 'square'] },
+            { sequence: ['square', 'circle', 'triangle', 'square', 'circle'], answer: 'triangle', options: ['square', 'circle', 'triangle'] },
+            { sequence: ['circle', 'circle', 'square', 'circle', 'circle'], answer: 'square', options: ['circle', 'square', 'triangle'] },
+            { sequence: ['triangle', 'square', 'circle', 'triangle', 'square'], answer: 'circle', options: ['triangle', 'square', 'circle'] }
+        ];
+        
+        const numberLevels = [
+            { sequence: [1, 2, 3, 4], answer: 5, options: [5, 6, 7] },
+            { sequence: [2, 4, 6, 8], answer: 10, options: [9, 10, 7] },
+            { sequence: [1, 2, 1, 2], answer: 1, options: [1, 2, 3] },
+            { sequence: [5, 6, 7, 8], answer: 9, options: [8, 9, 10] },
+            { sequence: [10, 9, 8, 7], answer: 6, options: [6, 5, 4] }
+        ];
+        
+        function startGame(mode) {
+            gameMode = mode;
+            currentLevel = 0;
+            score = 0;
+            document.getElementById('menuScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            loadLevel();
+        }
+        
+        function goToMenu() {
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('completeScreen').classList.add('hidden');
+            document.getElementById('menuScreen').classList.remove('hidden');
+        }
+        
+        function loadLevel() {
+            const levels = gameMode === 'shapes' ? shapeLevels : numberLevels;
+            const level = levels[currentLevel];
+            
+            document.getElementById('levelDisplay').textContent = currentLevel + 1;
+            document.getElementById('totalLevels').textContent = levels.length;
+            document.getElementById('scoreDisplay').textContent = score;
+            
+            const sequenceContainer = document.getElementById('sequenceContainer');
+            sequenceContainer.innerHTML = '';
+            
+            level.sequence.forEach((item, index) => {
+                if (gameMode === 'shapes') {
+                    const shape = createShape(item);
+                    sequenceContainer.appendChild(shape);
+                } else {
+                    const number = createNumber(item);
+                    sequenceContainer.appendChild(number);
+                }
+                
+                if (index < level.sequence.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '→';
+                    sequenceContainer.appendChild(arrow);
+                }
+            });
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow';
+            arrow.textContent = '→';
+            sequenceContainer.appendChild(arrow);
+            
+            const questionMark = document.createElement('div');
+            questionMark.className = 'question-mark';
+            questionMark.textContent = '?';
+            sequenceContainer.appendChild(questionMark);
+            
+            const optionsContainer = document.getElementById('optionsContainer');
+            optionsContainer.innerHTML = '';
+            
+            level.options.forEach(option => {
+                const optionBtn = document.createElement('button');
+                optionBtn.className = 'option-btn';
+                optionBtn.onclick = () => handleAnswer(option);
+                
+                if (gameMode === 'shapes') {
+                    const shape = createShape(option);
+                    optionBtn.appendChild(shape);
+                } else {
+                    const number = document.createElement('div');
+                    number.className = 'option-number';
+                    number.textContent = option;
+                    optionBtn.appendChild(number);
+                }
+                
+                optionsContainer.appendChild(optionBtn);
+            });
+        }
+        
+        function createShape(type) {
+            const container = document.createElement('div');
+            container.className = 'shape';
+            
+            const shape = document.createElement('div');
+            shape.className = type;
+            container.appendChild(shape);
+            
+            return container;
+        }
+        
+        function createNumber(num) {
+            const number = document.createElement('div');
+            number.className = 'number';
+            number.textContent = num;
+            return number;
+        }
+        
+        function handleAnswer(answer) {
+            const levels = gameMode === 'shapes' ? shapeLevels : numberLevels;
+            const level = levels[currentLevel];
+            
+            const feedbackOverlay = document.getElementById('feedbackOverlay');
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackEmoji = document.getElementById('feedbackEmoji');
+            const feedbackText = document.getElementById('feedbackText');
+            
+            if (answer === level.answer) {
+                score++;
+                feedbackBox.className = 'feedback-box';
+                feedbackEmoji.textContent = '🎉';
+                feedbackText.textContent = 'Браво!';
+                
+                feedbackOverlay.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    feedbackOverlay.classList.add('hidden');
+                    
+                    if (currentLevel < levels.length - 1) {
+                        currentLevel++;
+                        loadLevel();
+                    } else {
+                        showComplete();
+                    }
+                }, 1500);
+            } else {
+                feedbackBox.className = 'feedback-box wrong';
+                feedbackEmoji.textContent = '😊';
+                feedbackText.textContent = 'Опитай пак!';
+                
+                feedbackOverlay.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    feedbackOverlay.classList.add('hidden');
+                }, 1500);
+            }
+        }
+        
+        function showComplete() {
+            const levels = gameMode === 'shapes' ? shapeLevels : numberLevels;
+            document.getElementById('gameScreen').classList.add('hidden');
+            document.getElementById('completeScreen').classList.remove('hidden');
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalTotal').textContent = levels.length;
+        }
+    </script>
+</body>
+</html>

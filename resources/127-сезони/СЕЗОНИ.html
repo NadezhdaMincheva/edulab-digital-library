@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Пътешествие през сезоните</title>
+<style>
+  :root{
+    --winter-a:#7fb8e8; --winter-b:#e8f6ff;
+    --spring-a:#9ee37d; --spring-b:#ffd6e8;
+    --summer-a:#ffd76b; --summer-b:#ff9a6b;
+    --autumn-a:#e0823d; --autumn-b:#9c4f2b;
+    --bg-a:#6fb1ff; --bg-b:#ffd1e8;
+    --panel:#ffffff;
+    --text-dark:#2b2b3a;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    overflow:hidden;
+    font-family:'Trebuchet MS','Segoe UI',Verdana,sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select:none;
+  }
+  body{
+    background:linear-gradient(135deg,var(--bg-a),var(--bg-b));
+    transition:background 1s ease;
+    position:relative;
+  }
+  #app{ position:relative; width:100vw; height:100vh; overflow:hidden; }
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transform:scale(0.92);
+    transition:opacity .5s ease, transform .5s ease;
+    padding:20px;
+    text-align:center;
+  }
+  .screen.active{ opacity:1; pointer-events:auto; transform:scale(1); }
+  .bg-particles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+  .particle{
+    position:absolute; top:-10%;
+    font-size:2.4rem;
+    will-change:transform, top;
+    animation-name:fall;
+    animation-timing-function:linear;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,.15));
+  }
+  @keyframes fall{
+    from{ transform:translateY(0) rotate(0deg); }
+    to{ transform:translateY(115vh) rotate(360deg); }
+  }
+  h1{
+    font-size:clamp(2rem, 6vw, 3.6rem);
+    color:var(--text-dark);
+    text-shadow:0 3px 0 rgba(255,255,255,.6);
+    margin:0 0 10px 0;
+    z-index:2;
+  }
+  h2{
+    font-size:clamp(1.6rem, 5vw, 2.6rem);
+    color:var(--text-dark);
+    margin:0 0 4px 0;
+    z-index:2;
+  }
+  p{
+    font-size:clamp(1.1rem, 2.6vw, 1.5rem);
+    color:var(--text-dark);
+    z-index:2;
+    margin:4px 0 18px 0;
+  }
+  .big-button{
+    font-size:clamp(1.4rem, 3.4vw, 2.2rem);
+    font-weight:800;
+    padding:22px 54px;
+    border:none;
+    border-radius:60px;
+    background:linear-gradient(135deg,#ff8a65,#ff5e62);
+    color:#fff;
+    cursor:pointer;
+    box-shadow:0 10px 0 #c43e3e, 0 16px 24px rgba(0,0,0,.25);
+    transition:transform .12s ease, box-shadow .12s ease;
+    z-index:2;
+    animation:idle-bob 2.4s ease-in-out infinite;
+  }
+  .big-button:active{
+    transform:translateY(8px);
+    box-shadow:0 2px 0 #c43e3e, 0 6px 12px rgba(0,0,0,.2);
+  }
+  @keyframes idle-bob{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-10px); }
+  }
+  .title-emojis{ font-size:clamp(2.6rem,7vw,4rem); z-index:2; margin-bottom:6px; }
+
+  /* SEASON MAP */
+  .season-bubbles{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:clamp(18px, 4vw, 40px);
+    z-index:2;
+    margin-top:10px;
+  }
+  .season-bubble{
+    position:relative;
+    width:clamp(140px, 22vw, 220px);
+    height:clamp(140px, 22vw, 220px);
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    font-size:clamp(1rem, 2.4vw, 1.4rem);
+    font-weight:800;
+    color:#fff;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    box-shadow:0 10px 0 rgba(0,0,0,.18), 0 16px 26px rgba(0,0,0,.22);
+    transition:transform .15s ease;
+    animation:idle-bob 3s ease-in-out infinite;
+  }
+  .season-bubble:nth-child(2){ animation-delay:.3s; }
+  .season-bubble:nth-child(3){ animation-delay:.6s; }
+  .season-bubble:nth-child(4){ animation-delay:.9s; }
+  .season-bubble .emo{ font-size:clamp(2.6rem,6vw,3.8rem); margin-bottom:4px; }
+  .season-bubble:active{ transform:scale(.93); }
+  .season-bubble.winter{ background:radial-gradient(circle at 30% 30%, var(--winter-b), var(--winter-a)); }
+  .season-bubble.spring{ background:radial-gradient(circle at 30% 30%, var(--spring-b), var(--spring-a)); }
+  .season-bubble.summer{ background:radial-gradient(circle at 30% 30%, var(--summer-b), var(--summer-a)); }
+  .season-bubble.autumn{ background:radial-gradient(circle at 30% 30%, #ffb877, var(--autumn-a)); }
+  .season-bubble .check{
+    position:absolute; top:-6px; right:-6px;
+    background:#3ddc84; color:#fff; border-radius:50%;
+    width:42px; height:42px; display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; box-shadow:0 4px 8px rgba(0,0,0,.25);
+    transform:scale(0); transition:transform .3s ease;
+  }
+  .season-bubble.done .check{ transform:scale(1); }
+
+  /* GAME SCREEN */
+  .round-indicator{
+    font-size:clamp(1rem, 2.2vw, 1.3rem);
+    color:var(--text-dark);
+    z-index:2;
+    margin-bottom:6px;
+    font-weight:700;
+    opacity:.8;
+  }
+  .progress-stars{
+    font-size:clamp(1.6rem,3.4vw,2.2rem);
+    margin-bottom:10px; z-index:2;
+    letter-spacing:6px;
+  }
+  #items-grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:clamp(14px, 3vw, 28px);
+    z-index:2;
+    transition:opacity .25s ease;
+  }
+  .item-btn{
+    width:clamp(95px, 17vw, 160px);
+    height:clamp(95px, 17vw, 160px);
+    border-radius:28px;
+    border:none;
+    background:var(--panel);
+    font-size:clamp(2.4rem, 6vw, 4rem);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow:0 8px 0 rgba(0,0,0,.15), 0 12px 18px rgba(0,0,0,.18);
+    position:relative;
+    transition:transform .12s ease;
+  }
+  .item-btn:active{ transform:scale(.92); }
+  .item-btn.shake{ animation:shake .45s ease; }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-10px) rotate(-4deg); }
+    40%{ transform:translateX(10px) rotate(4deg); }
+    60%{ transform:translateX(-8px) rotate(-3deg); }
+    80%{ transform:translateX(8px) rotate(3deg); }
+  }
+  .item-btn.found{
+    background:linear-gradient(135deg,#bdf5c8,#7fe89c);
+    pointer-events:none;
+    animation:pop .4s ease;
+  }
+  .item-btn.found::after{
+    content:"⭐";
+    position:absolute; top:-14px; right:-10px; font-size:2rem;
+    animation:pop .4s ease;
+  }
+  @keyframes pop{
+    0%{ transform:scale(0.6); }
+    60%{ transform:scale(1.15); }
+    100%{ transform:scale(1); }
+  }
+  .round-banner{
+    position:absolute;
+    top:38%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.6);
+    font-size:clamp(2rem,6vw,3.2rem);
+    font-weight:800;
+    color:#fff;
+    text-shadow:0 4px 10px rgba(0,0,0,.35);
+    background:rgba(255,255,255,.18);
+    padding:14px 36px;
+    border-radius:30px;
+    opacity:0;
+    pointer-events:none;
+    z-index:10;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .round-banner.show{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+  }
+
+  .back-btn{
+    position:absolute; top:18px; left:18px;
+    background:rgba(255,255,255,.85);
+    border:none; border-radius:50%;
+    width:54px; height:54px; font-size:1.6rem;
+    cursor:pointer; z-index:5;
+    box-shadow:0 4px 10px rgba(0,0,0,.2);
+  }
+  .sound-btn{
+    position:absolute; top:18px; right:18px;
+    background:rgba(255,255,255,.85);
+    border:none; border-radius:50%;
+    width:54px; height:54px; font-size:1.5rem;
+    cursor:pointer; z-index:5;
+    box-shadow:0 4px 10px rgba(0,0,0,.2);
+  }
+
+  .trophy{
+    font-size:clamp(4rem,12vw,7rem);
+    animation:idle-bob 1.6s ease-in-out infinite;
+    z-index:2;
+  }
+
+  /* CONFETTI */
+  .confetti-layer{ position:fixed; inset:0; pointer-events:none; z-index:50; overflow:hidden; }
+  .confetti-piece{
+    position:absolute; top:0; left:0;
+    width:12px; height:12px;
+    opacity:0.95;
+    animation-name:confetti-fall;
+    animation-timing-function:cubic-bezier(.2,.6,.3,1);
+    animation-fill-mode:forwards;
+  }
+  @keyframes confetti-fall{
+    to{ transform:translate(var(--dx), var(--dy)) rotate(var(--rot)); opacity:0; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <button class="sound-btn" id="soundToggle" title="Звук">🔊</button>
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="screen-start">
+    <div class="bg-particles" id="bg-start"></div>
+    <div class="title-emojis">❄️🌸☀️🍂</div>
+    <h1>Пътешествие през сезоните</h1>
+    <p>Открий вълшебните предмети във всеки сезон!</p>
+    <button class="big-button" id="btnStart">▶️ Старт</button>
+  </div>
+
+  <!-- MAP SCREEN -->
+  <div class="screen" id="screen-map">
+    <div class="bg-particles" id="bg-map"></div>
+    <h2>Избери сезон 🗺️</h2>
+    <p>Докосни кръгчето, за да започнеш</p>
+    <div class="season-bubbles" id="seasonBubbles"></div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="screen-game">
+    <button class="back-btn" id="btnBackMap" title="Назад">⬅️</button>
+    <div class="bg-particles" id="bg-game"></div>
+    <div class="round-banner" id="roundBanner">🎉 Чудесно!</div>
+    <h2 id="gameTitle"></h2>
+    <div class="round-indicator" id="roundIndicator"></div>
+    <p id="gameInstruction">Намери всички предмети за сезона!</p>
+    <div class="progress-stars" id="progressStars"></div>
+    <div id="items-grid"></div>
+  </div>
+
+  <!-- SEASON COMPLETE -->
+  <div class="screen" id="screen-season-complete">
+    <div class="bg-particles" id="bg-complete"></div>
+    <div class="trophy">🎉</div>
+    <h1 id="completeTitle">Браво!</h1>
+    <p>Намери всички предмети за сезона!</p>
+    <button class="big-button" id="btnToMap">Продължи ➡️</button>
+  </div>
+
+  <!-- FINAL SCREEN -->
+  <div class="screen" id="screen-final">
+    <div class="bg-particles" id="bg-final"></div>
+    <div class="trophy">🏆</div>
+    <h1>Поздравления!</h1>
+    <p>Ти откри вълшебството на всички сезони!</p>
+    <button class="big-button" id="btnRestart">🔁 Играй пак</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- DATA: 12 items per season -> 4 rounds x 3 = 16 rounds total ----------
+  const SEASONS = {
+    winter:{ name:"Зима", emo:"❄️", cls:"winter",
+      bg:"linear-gradient(135deg,#7fb8e8,#e8f6ff)",
+      particles:["❄️","❄️","❄️","🌨️"],
+      correct:["⛄","🛷","🧤","🧣","❄️","⛷️","🏂","🦌","🎄","🧊","🥶","🧥"] },
+    spring:{ name:"Пролет", emo:"🌸", cls:"spring",
+      bg:"linear-gradient(135deg,#9ee37d,#ffd6e8)",
+      particles:["🌸","🌼","🌷","🦋"],
+      correct:["🌷","🐣","🌱","🦋","🌼","🐝","☂️","🐰","🌧️","🍃","🌦️","🐦"] },
+    summer:{ name:"Лято", emo:"☀️", cls:"summer",
+      bg:"linear-gradient(135deg,#ffd76b,#ff9a6b)",
+      particles:["☀️","🌴","🐚"],
+      correct:["🍦","🍉","🕶️","🏖️","☀️","🩴","🍹","🐠","⛵","🌞","🦩","🐚"] },
+    autumn:{ name:"Есен", emo:"🍂", cls:"autumn",
+      bg:"linear-gradient(135deg,#e0823d,#9c4f2b)",
+      particles:["🍂","🍁","🌧️"],
+      correct:["🍁","🎃","🍄","☔","🌰","🦔","🍂","🦃","🌽","🧦","🕸️","🪵"] }
+  };
+  const SEASON_ORDER = ["winter","spring","summer","autumn"];
+
+  function chunk3(arr){
+    const out=[];
+    for(let i=0;i<arr.length;i+=3) out.push(arr.slice(i,i+3));
+    return out;
+  }
+  function sample(arr, n){
+    const copy = arr.slice().sort(()=>Math.random()-0.5);
+    return copy.slice(0,n);
+  }
+  function distractorPool(currentKey){
+    let pool = [];
+    SEASON_ORDER.forEach(k=>{
+      if(k!==currentKey) pool = pool.concat(SEASONS[k].correct);
+    });
+    return pool;
+  }
+
+  // ---------- STATE ----------
+  let state = {
+    completed:new Set(),
+    currentSeason:null,
+    currentRoundIdx:0,
+    rounds:[],
+    found:new Set(),
+    currentItems:[],
+    soundOn:true
+  };
+
+  // ---------- SCREEN HELPERS ----------
+  const screens = {};
+  document.querySelectorAll(".screen").forEach(s=> screens[s.id]=s);
+  let bgIntervals = {};
+
+  function showScreen(id){
+    Object.values(screens).forEach(s=>s.classList.remove("active"));
+    screens[id].classList.add("active");
+  }
+
+  // ---------- BACKGROUND PARTICLES ----------
+  function clearInterval_(key){
+    if(bgIntervals[key]){ clearInterval(bgIntervals[key]); bgIntervals[key]=null; }
+  }
+  function spawnParticles(containerId, emojiList, key){
+    clearInterval_(key);
+    const container = document.getElementById(containerId);
+    if(!container) return;
+    bgIntervals[key] = setInterval(()=>{
+      const p = document.createElement("div");
+      p.className = "particle";
+      p.textContent = emojiList[Math.floor(Math.random()*emojiList.length)];
+      p.style.left = (Math.random()*92)+"%";
+      const dur = 5 + Math.random()*5;
+      p.style.animationDuration = dur+"s";
+      p.style.fontSize = (1.6 + Math.random()*1.8) + "rem";
+      container.appendChild(p);
+      setTimeout(()=>{ p.remove(); }, dur*1000+200);
+    }, 550);
+  }
+  function stopAllParticles(){ Object.keys(bgIntervals).forEach(clearInterval_); }
+
+  const MIXED = ["❄️","🌸","☀️","🍂","🌈","⭐"];
+
+  // ---------- AUDIO ----------
+  let audioCtx = null;
+  function ensureAudio(){
+    if(!audioCtx){
+      try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){}
+    }
+  }
+  function tone(freq, start, dur, type, gainVal){
+    if(!state.soundOn || !audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    gain.gain.value = 0;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    const t0 = audioCtx.currentTime + start;
+    gain.gain.linearRampToValueAtTime(gainVal||0.15, t0+0.02);
+    gain.gain.linearRampToValueAtTime(0, t0+dur);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }
+  function playCorrect(){
+    tone(523.25,0,.18,"triangle",.18);
+    tone(659.25,.12,.18,"triangle",.18);
+    tone(783.99,.24,.25,"triangle",.2);
+  }
+  function playWrong(){
+    tone(220,0,.18,"sine",.12);
+    tone(196,.1,.22,"sine",.1);
+  }
+  function playCelebration(){
+    const notes=[523.25,587.33,659.25,698.46,783.99,880];
+    notes.forEach((f,i)=> tone(f, i*0.12, .3, "triangle", .18));
+  }
+
+  // ---------- CONFETTI ----------
+  const colors = ["#ff6b6b","#ffd93d","#6bcB77","#4d96ff","#ff8fab","#c77dff"];
+  function confettiBurst(x, y, count){
+    const layer = document.createElement("div");
+    layer.className = "confetti-layer";
+    document.body.appendChild(layer);
+    count = count || 26;
+    for(let i=0;i<count;i++){
+      const piece = document.createElement("div");
+      piece.className = "confetti-piece";
+      piece.style.left = x+"px";
+      piece.style.top = y+"px";
+      piece.style.background = colors[Math.floor(Math.random()*colors.length)];
+      piece.style.borderRadius = Math.random()>0.5 ? "50%" : "3px";
+      const angle = Math.random()*Math.PI*2;
+      const dist = 80 + Math.random()*180;
+      const dx = Math.cos(angle)*dist;
+      const dy = Math.sin(angle)*dist + 140;
+      const rot = (Math.random()*720-360)+"deg";
+      piece.style.setProperty("--dx", dx+"px");
+      piece.style.setProperty("--dy", dy+"px");
+      piece.style.setProperty("--rot", rot);
+      piece.style.animationDuration = (0.9+Math.random()*0.6)+"s";
+      layer.appendChild(piece);
+    }
+    setTimeout(()=> layer.remove(), 1700);
+  }
+  function bigCelebration(){
+    const w = window.innerWidth;
+    let bursts = 0;
+    const iv = setInterval(()=>{
+      confettiBurst(Math.random()*w, 0, 30);
+      bursts++;
+      if(bursts>6) clearInterval(iv);
+    }, 350);
+  }
+  function smallCelebration(){
+    const w = window.innerWidth;
+    confettiBurst(w*0.3, 60, 24);
+    confettiBurst(w*0.7, 60, 24);
+  }
+
+  // ---------- BUILD MAP ----------
+  function buildMap(){
+    const wrap = document.getElementById("seasonBubbles");
+    wrap.innerHTML = "";
+    SEASON_ORDER.forEach(key=>{
+      const s = SEASONS[key];
+      const btn = document.createElement("button");
+      btn.className = "season-bubble " + s.cls + (state.completed.has(key)?" done":"");
+      btn.innerHTML = `<span class="emo">${s.emo}</span>${s.name}<span class="check">✓</span>`;
+      btn.addEventListener("click", ()=> startSeason(key));
+      wrap.appendChild(btn);
+    });
+  }
+
+  // ---------- GAME LOGIC ----------
+  function startSeason(key){
+    state.currentSeason = key;
+    state.currentRoundIdx = 0;
+    state.rounds = chunk3(SEASONS[key].correct);
+
+    const s = SEASONS[key];
+    document.body.style.background = s.bg;
+    document.getElementById("gameTitle").textContent = s.emo + " " + s.name;
+    spawnParticles("bg-game", s.particles, "game");
+
+    loadRound();
+    showScreen("screen-game");
+  }
+
+  function loadRound(){
+    const key = state.currentSeason;
+    const roundCorrect = state.rounds[state.currentRoundIdx];
+    const distract = sample(distractorPool(key), 3);
+
+    let items = roundCorrect.map(e=>({emo:e, correct:true}))
+      .concat(distract.map(e=>({emo:e, correct:false})));
+    items = items.sort(()=>Math.random()-0.5);
+
+    state.found = new Set();
+    state.currentItems = items;
+
+    document.getElementById("roundIndicator").textContent =
+      "Рунд " + (state.currentRoundIdx+1) + " от " + state.rounds.length;
+
+    renderItems();
+    updateProgress();
+  }
+
+  function renderItems(){
+    const grid = document.getElementById("items-grid");
+    grid.style.opacity = 0;
+    setTimeout(()=>{
+      grid.innerHTML = "";
+      state.currentItems.forEach((item, idx)=>{
+        const btn = document.createElement("button");
+        btn.className = "item-btn";
+        btn.textContent = item.emo;
+        btn.dataset.idx = idx;
+        btn.addEventListener("click", ()=> onItemClick(idx, btn));
+        grid.appendChild(btn);
+      });
+      grid.style.opacity = 1;
+    }, 180);
+  }
+
+  function updateProgress(){
+    const total = state.rounds[state.currentRoundIdx].length;
+    let stars = "";
+    for(let i=0;i<total;i++){
+      stars += i < state.found.size ? "⭐" : "☆";
+    }
+    document.getElementById("progressStars").textContent = stars;
+  }
+
+  function onItemClick(idx, btn){
+    const item = state.currentItems[idx];
+    if(btn.classList.contains("found")) return;
+
+    if(item.correct){
+      btn.classList.add("found");
+      state.found.add(idx);
+      playCorrect();
+      const rect = btn.getBoundingClientRect();
+      confettiBurst(rect.left+rect.width/2, rect.top+rect.height/2, 22);
+      updateProgress();
+
+      const total = state.rounds[state.currentRoundIdx].length;
+      if(state.found.size >= total){
+        setTimeout(()=> roundDone(), 650);
+      }
+    }else{
+      btn.classList.remove("shake");
+      void btn.offsetWidth;
+      btn.classList.add("shake");
+      playWrong();
+    }
+  }
+
+  function roundDone(){
+    const isLastRound = state.currentRoundIdx >= state.rounds.length - 1;
+    if(!isLastRound){
+      const banner = document.getElementById("roundBanner");
+      banner.textContent = "🎉 Чудесно!";
+      banner.classList.add("show");
+      smallCelebration();
+      playCelebration();
+      setTimeout(()=>{
+        banner.classList.remove("show");
+        state.currentRoundIdx++;
+        loadRound();
+      }, 1300);
+    }else{
+      finishSeason();
+    }
+  }
+
+  function finishSeason(){
+    stopAllParticles();
+    const key = state.currentSeason;
+    state.completed.add(key);
+    const s = SEASONS[key];
+    document.getElementById("completeTitle").textContent = "Браво! " + s.emo;
+    spawnParticles("bg-complete", MIXED, "complete");
+    showScreen("screen-season-complete");
+    smallCelebration();
+    playCelebration();
+
+    if(state.completed.size >= SEASON_ORDER.length){
+      setTimeout(()=>{
+        stopAllParticles();
+        spawnParticles("bg-final", MIXED, "final");
+        showScreen("screen-final");
+        bigCelebration();
+        playCelebration();
+      }, 1800);
+    }
+  }
+
+  // ---------- NAVIGATION ----------
+  document.getElementById("btnStart").addEventListener("click", ()=>{
+    ensureAudio();
+    stopAllParticles();
+    buildMap();
+    document.body.style.background = "linear-gradient(135deg,var(--bg-a),var(--bg-b))";
+    spawnParticles("bg-map", MIXED, "map");
+    showScreen("screen-map");
+  });
+
+  document.getElementById("btnBackMap").addEventListener("click", ()=>{
+    stopAllParticles();
+    document.body.style.background = "linear-gradient(135deg,var(--bg-a),var(--bg-b))";
+    buildMap();
+    spawnParticles("bg-map", MIXED, "map");
+    showScreen("screen-map");
+  });
+
+  document.getElementById("btnToMap").addEventListener("click", ()=>{
+    stopAllParticles();
+    document.body.style.background = "linear-gradient(135deg,var(--bg-a),var(--bg-b))";
+    buildMap();
+    spawnParticles("bg-map", MIXED, "map");
+    showScreen("screen-map");
+  });
+
+  document.getElementById("btnRestart").addEventListener("click", ()=>{
+    state.completed = new Set();
+    state.currentSeason = null;
+    state.currentRoundIdx = 0;
+    state.found = new Set();
+    stopAllParticles();
+    document.body.style.background = "linear-gradient(135deg,var(--bg-a),var(--bg-b))";
+    spawnParticles("bg-start", MIXED, "start");
+    showScreen("screen-start");
+  });
+
+  document.getElementById("soundToggle").addEventListener("click", function(){
+    state.soundOn = !state.soundOn;
+    this.textContent = state.soundOn ? "🔊" : "🔇";
+  });
+
+  // initial background particles on start screen
+  spawnParticles("bg-start", MIXED, "start");
+
+})();
+</script>
+</body>
+</html>

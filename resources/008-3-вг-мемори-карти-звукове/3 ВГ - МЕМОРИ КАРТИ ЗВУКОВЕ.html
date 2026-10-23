@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Звучко: Мемори игри</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #fff9c4; text-align: center; padding: 10px; margin: 0; }
+        h1 { color: #f57c00; font-size: 2rem; margin: 10px 0; }
+        
+        #controls { margin-bottom: 15px; }
+        .reset-btn { 
+            background: #f57c00; color: white; border: none; padding: 15px 40px; 
+            font-size: 1.5rem; border-radius: 10px; cursor: pointer; font-weight: bold;
+        }
+
+        #game-board { 
+            display: grid; grid-template-columns: repeat(4, 150px); 
+            gap: 15px; justify-content: center; margin: auto;
+        }
+        
+        .card { 
+            width: 150px; height: 180px; background: #ffcc80; border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 4.5rem; font-weight: bold; color: transparent; /* Скрит текст */
+            cursor: pointer; border: 4px solid #ef6c00;
+            user-select: none;
+        }
+
+        /* КОРИГИРАНО: Тук няма трансформации, само смяна на цвят и видимост */
+        .card.flipped { 
+            background: #ffffff !important; 
+            color: #d32f2f !important; 
+        }
+
+        .card.matched { 
+            background: #c8e6c9 !important; 
+            color: #2e7d32 !important; 
+            border-color: #2e7d32 !important; 
+            cursor: default; 
+        }
+
+        .img-card { font-size: 6rem !important; }
+    </style>
+</head>
+<body>
+
+    <h1>Звучко: Намери двойките!</h1>
+    
+    <div id="controls">
+        <button class="reset-btn" onclick="resetGame()">НОВА ИГРА (Разбъркай)</button>
+    </div>
+
+    <div id="game-board"></div>
+
+<script>
+    const items = [
+        { type: 'letter', value: 'М', matchId: 1 }, { type: 'img', value: '👩', matchId: 1 }, 
+        { type: 'letter', value: 'К', matchId: 2 }, { type: 'img', value: '🐱', matchId: 2 }, 
+        { type: 'letter', value: 'Л', matchId: 3 }, { type: 'img', value: '🦁', matchId: 3 }, 
+        { type: 'letter', value: 'Н', matchId: 4 }, { type: 'img', value: '👃', matchId: 4 }, 
+        { type: 'letter', value: 'С', matchId: 5 }, { type: 'img', value: '☀️', matchId: 5 }, 
+        { type: 'letter', value: 'З', matchId: 6 }, { type: 'img', value: '🐍', matchId: 6 }
+    ];
+
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let canFlip = true;
+
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function createBoard() {
+        const board = document.getElementById('game-board');
+        board.innerHTML = "";
+        const shuffledItems = shuffle([...items]);
+        
+        shuffledItems.forEach((item) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.matchId = item.matchId;
+            card.dataset.value = item.value;
+            if(item.type === 'img') card.classList.add('img-card');
+            
+            card.addEventListener('click', function() {
+                if (!canFlip || this.classList.contains('flipped') || this.classList.contains('matched')) return;
+
+                this.classList.add('flipped');
+                this.innerText = this.dataset.value;
+                flippedCards.push(this);
+
+                if (flippedCards.length === 2) {
+                    canFlip = false;
+                    setTimeout(checkMatch, 800);
+                }
+            });
+            board.appendChild(card);
+        });
+    }
+
+    function checkMatch() {
+        const [card1, card2] = flippedCards;
+        if (card1.dataset.matchId === card2.dataset.matchId) {
+            card1.classList.add('matched');
+            card2.classList.add('matched');
+            matchedPairs++;
+            if (matchedPairs === items.length / 2) {
+                alert("Браво! Всички букви са намерени!");
+            }
+        } else {
+            card1.classList.remove('flipped');
+            card2.classList.remove('flipped');
+            card1.innerText = "";
+            card2.innerText = "";
+        }
+        flippedCards = [];
+        canFlip = true;
+    }
+
+    function resetGame() {
+        matchedPairs = 0;
+        flippedCards = [];
+        canFlip = true;
+        createBoard();
+    }
+
+    createBoard();
+</script>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Лабиринт 🏃</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;}
+body{
+  margin:0;min-height:100vh;
+  font-family:'Comic Sans MS','Trebuchet MS',sans-serif;
+  background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+  display:flex;align-items:flex-start;justify-content:center;padding:12px;
+}
+#app{width:100%;max-width:620px;}
+.panel{
+  background:rgba(255,255,255,0.96);
+  border-radius:28px;padding:20px 16px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+h1{text-align:center;margin:0 0 2px;font-size:clamp(22px,5vw,34px);color:#2d3436;}
+.level-badge{
+  text-align:center;font-weight:bold;font-size:14px;
+  margin-bottom:10px;color:#6c5ce7;
+}
+.stat-bar{display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;}
+.stat{background:#f1f2f6;border-radius:12px;padding:7px 16px;font-weight:bold;text-align:center;min-width:90px;}
+.stat .lbl{display:block;font-size:10px;color:#636e72;margin-bottom:1px;}
+.stat .val{font-size:19px;color:#6c5ce7;}
+
+/* MAZE */
+.maze-outer{overflow:auto;display:flex;justify-content:center;}
+.maze-grid{display:grid;line-height:0;}
+.cell{
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:background .15s;
+  line-height:1;
+}
+.cell.wall{background:var(--wall-color,#6c5ce7);border-radius:3px;}
+.cell.path{background:#f0f0f8;}
+.cell.visited{background:#e8e0ff;}
+.cell.hero{background:#fff3cd;border-radius:50%;animation:heroBob .7s ease-in-out infinite alternate;}
+.cell.goal{background:#d4fce4;border-radius:6px;animation:goalPulse 1s ease-in-out infinite;}
+@keyframes heroBob{from{transform:scale(1);}to{transform:scale(1.1);}}
+@keyframes goalPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+
+/* DPAD */
+.dpad{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:190px;margin:14px auto 0;}
+.dbtn{
+  aspect-ratio:1;border:none;border-radius:16px;
+  font-size:clamp(18px,5vw,26px);cursor:pointer;
+  background:linear-gradient(145deg,#6c5ce7,#a29bfe);
+  color:#fff;box-shadow:0 5px 0 #4834d4;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .1s,box-shadow .1s;
+}
+.dbtn:active{transform:translateY(3px);box-shadow:0 2px 0 #4834d4;}
+.dbtn.empty{background:transparent;box-shadow:none;pointer-events:none;}
+
+.btn-row{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+.prim-btn{
+  background:linear-gradient(145deg,#6c5ce7,#a29bfe);color:#fff;
+  border:none;padding:10px 20px;border-radius:14px;
+  font-weight:bold;cursor:pointer;font-family:inherit;font-size:14px;
+  box-shadow:0 5px 0 #4834d4;
+}
+.prim-btn:active{transform:translateY(2px);box-shadow:0 3px 0 #4834d4;}
+.sec-btn{
+  background:#dfe6e9;color:#2d3436;
+  border:none;padding:10px 20px;border-radius:14px;
+  font-weight:bold;cursor:pointer;font-family:inherit;font-size:14px;
+  box-shadow:0 5px 0 #b2bec3;
+}
+.sec-btn:active{transform:translateY(2px);box-shadow:0 3px 0 #b2bec3;}
+
+.hint{text-align:center;font-size:11px;color:#b2bec3;margin-top:8px;}
+
+/* OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px;}
+.win-box{background:#fff;border-radius:24px;padding:28px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.4);position:relative;overflow:hidden;}
+.win-box h2{font-size:26px;color:#e84393;margin:6px 0;}
+.win-stats{display:flex;justify-content:center;gap:12px;margin:14px 0;}
+.win-stats div{background:#f8f8ff;border-radius:12px;padding:10px 14px;}
+.win-stats .v{display:block;font-size:22px;font-weight:bold;color:#6c5ce7;}
+.win-stats .l{font-size:11px;color:#636e72;}
+.confetti{position:absolute;top:-20px;width:10px;height:16px;animation:fall linear forwards;}
+@keyframes fall{to{transform:translateY(540px) rotate(360deg);opacity:0;}}
+
+/* LEVEL SELECT */
+.lvl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-top:10px;}
+.lvl-btn{
+  border:none;border-radius:18px;padding:16px 10px;cursor:pointer;
+  font-family:inherit;font-weight:bold;font-size:15px;
+  background:linear-gradient(145deg,#fff,#f1f2f6);
+  box-shadow:0 6px 0 #dcdde1,0 8px 14px rgba(0,0,0,.1);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  transition:transform .15s;
+}
+.lvl-btn:hover{transform:translateY(-3px);}
+.lvl-btn:active{transform:translateY(2px);box-shadow:0 2px 0 #dcdde1;}
+.lvl-btn .icon{font-size:32px;}
+.lvl-btn .stars{font-size:13px;color:#f39c12;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const LEVELS = [
+  {n:1, size:9,  label:'Много лесно', stars:'⭐',         wallColor:'#74b9ff', hero:'🐱', goal:'🐟'},
+  {n:2, size:11, label:'Лесно',       stars:'⭐⭐',        wallColor:'#55efc4', hero:'🐶', goal:'🦴'},
+  {n:3, size:13, label:'Средно',      stars:'⭐⭐⭐',       wallColor:'#fdcb6e', hero:'🧒', goal:'🏠'},
+  {n:4, size:15, label:'Трудно',      stars:'🔥',          wallColor:'#e17055', hero:'🦊', goal:'🌟'},
+  {n:5, size:17, label:'Много трудно',stars:'🔥🔥',        wallColor:'#a29bfe', hero:'🚀', goal:'🪐'},
+  {n:6, size:19, label:'Екстремно',   stars:'🔥🔥🔥',      wallColor:'#fd79a8', hero:'🧙', goal:'💎'},
+  {n:7, size:21, label:'Маратон 🏆',  stars:'👑',          wallColor:'#6c5ce7', hero:'🦸', goal:'🏆'},
+];
+
+let curLevel = null;
+let maze=[], hero={r:1,c:1}, goal={r:0,c:0};
+let moves=0, seconds=0, timer=null, finished=false;
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=0|Math.random()*(i+1);[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function fmt(s){return String(0|s/60).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+
+// Iterative recursive backtracking maze generation
+function genMaze(rows, cols){
+  const m = Array.from({length:rows},()=>Array(cols).fill(1));
+  const stack=[[1,1]];
+  m[1][1]=0;
+  while(stack.length){
+    const [r,c]=stack[stack.length-1];
+    const dirs=shuffle([[0,2],[0,-2],[2,0],[-2,0]]);
+    let moved=false;
+    for(const [dr,dc] of dirs){
+      const nr=r+dr, nc=c+dc;
+      if(nr>0&&nr<rows-1&&nc>0&&nc<cols-1&&m[nr][nc]===1){
+        m[r+dr/2][c+dc/2]=0;
+        m[nr][nc]=0;
+        stack.push([nr,nc]);
+        moved=true;
+        break;
+      }
+    }
+    if(!moved) stack.pop();
+  }
+  return m;
+}
+
+function cellPx(size){
+  const avail=Math.min(window.innerWidth,620)-40;
+  return Math.max(14, Math.min(42, Math.floor((avail-size*2)/size)));
+}
+
+/* ---- SCREENS ---- */
+function renderSelect(){
+  document.getElementById('app').innerHTML=`
+    <div class="panel">
+      <h1>🏃 Лабиринт</h1>
+      <div class="level-badge">Избери ниво и води героя до целта!</div>
+      <div class="lvl-grid">
+        ${LEVELS.map(l=>`
+          <button class="lvl-btn" data-action="start-level" data-id="${l.n}">
+            <span class="icon">${l.hero}→${l.goal}</span>
+            <span style="color:#2d3436;">Ниво ${l.n}</span>
+            <span style="font-size:12px;color:#636e72;">${l.label}</span>
+            <span class="stars">${l.stars}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderGame(){
+  const L=curLevel;
+  const px=cellPx(L.size);
+  document.getElementById('app').style.setProperty('--wall-color', L.wallColor);
+  document.getElementById('app').innerHTML=`
+    <div class="panel" style="--wall-color:${L.wallColor};">
+      <h1>🏃 Лабиринт</h1>
+      <div class="level-badge">Ниво ${L.n} · ${L.label} ${L.stars}</div>
+      <div class="stat-bar">
+        <div class="stat"><span class="lbl">СТЪПКИ</span><span class="val" id="mv">${moves}</span></div>
+        <div class="stat"><span class="lbl">ВРЕМЕ</span><span class="val" id="tv">${fmt(seconds)}</span></div>
+      </div>
+      <div class="maze-outer">
+        <div class="maze-grid" id="grid"
+          style="grid-template-columns:repeat(${L.size},${px}px);gap:2px;">
+          ${buildCells(px)}
+        </div>
+      </div>
+      <div class="dpad">
+        <div class="dbtn empty"></div>
+        <button class="dbtn" data-dir="up">⬆️</button>
+        <div class="dbtn empty"></div>
+        <button class="dbtn" data-dir="left">⬅️</button>
+        <div class="dbtn empty"></div>
+        <button class="dbtn" data-dir="right">➡️</button>
+        <div class="dbtn empty"></div>
+        <button class="dbtn" data-dir="down">⬇️</button>
+        <div class="dbtn empty"></div>
+      </div>
+      <div class="btn-row">
+        <button class="sec-btn" data-action="pick-level">🗂 Нива</button>
+        <button class="prim-btn" data-action="restart">🔄 Ново</button>
+      </div>
+      <div class="hint">⌨️ Стрелки / WASD · 📱 Swipe или бутони</div>
+    </div>`;
+}
+
+function buildCells(px){
+  const L=curLevel; let html='';
+  for(let r=0;r<L.size;r++){
+    for(let c=0;c<L.size;c++){
+      let cls='path', content='';
+      if(maze[r][c]===1) cls='wall';
+      if(r===hero.r&&c===hero.c){cls='hero';content=L.hero;}
+      else if(r===goal.r&&c===goal.c){cls='goal';content=L.goal;}
+      html+=`<div class="cell ${cls}" style="width:${px}px;height:${px}px;font-size:${px*.7}px;">${content}</div>`;
+    }
+  }
+  return html;
+}
+
+function updateBoard(){
+  const L=curLevel;
+  const px=cellPx(L.size);
+  const grid=document.getElementById('grid');
+  if(!grid) return;
+  const cells=grid.children;
+  for(let r=0;r<L.size;r++){
+    for(let c=0;c<L.size;c++){
+      const cell=cells[r*L.size+c];
+      let cls=maze[r][c]===1?'wall':'path';
+      cell.textContent='';
+      if(r===hero.r&&c===hero.c){cls='hero';cell.textContent=L.hero;}
+      else if(r===goal.r&&c===goal.c){cls='goal';cell.textContent=L.goal;}
+      cell.className=`cell ${cls}`;
+    }
+  }
+  const mv=document.getElementById('mv');
+  const tv=document.getElementById('tv');
+  if(mv) mv.textContent=moves;
+  if(tv) tv.textContent=fmt(seconds);
+}
+
+function startLevel(id){
+  curLevel=LEVELS.find(l=>l.n===id);
+  maze=genMaze(curLevel.size,curLevel.size);
+  hero={r:1,c:1};
+  goal={r:curLevel.size-2,c:curLevel.size-2};
+  moves=0;seconds=0;finished=false;
+  if(timer){clearInterval(timer);timer=null;}
+  renderGame();
+}
+
+function move(dr,dc){
+  if(finished) return;
+  const nr=hero.r+dr, nc=hero.c+dc;
+  if(nr<0||nr>=curLevel.size||nc<0||nc>=curLevel.size) return;
+  if(maze[nr][nc]===1) return;
+  if(!timer) timer=setInterval(()=>{seconds++;const tv=document.getElementById('tv');if(tv)tv.textContent=fmt(seconds);},1000);
+  hero.r=nr;hero.c=nc;moves++;
+  updateBoard();
+  if(hero.r===goal.r&&hero.c===goal.c){
+    finished=true;
+    if(timer){clearInterval(timer);timer=null;}
+    setTimeout(showWin,250);
+  }
+}
+
+function showWin(){
+  const L=curLevel;
+  const colors=['#e74c3c','#f1c40f','#2ecc71','#3498db','#9b59b6','#e84393'];
+  let conf='';
+  for(let i=0;i<64;i++){
+    const l=Math.random()*100,dl=Math.random()*.5,du=1.6+Math.random()*1.4;
+    conf+=`<div class="confetti" style="left:${l}%;background:${colors[i%6]};animation-delay:${dl}s;animation-duration:${du}s;"></div>`;
+  }
+  const hasNext=L.n<LEVELS.length;
+  const ov=document.createElement('div');
+  ov.className='overlay';
+  ov.innerHTML=`
+    <div class="win-box">
+      ${conf}
+      <div style="font-size:52px;">${L.goal}</div>
+      <h2>Браво! Намери пътя! 🎉</h2>
+      <div class="win-stats">
+        <div><span class="v">${fmt(seconds)}</span><span class="l">ВРЕМЕ</span></div>
+        <div><span class="v">${moves}</span><span class="l">СТЪПКИ</span></div>
+        <div><span class="v">${L.n}</span><span class="l">НИВО</span></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        ${hasNext?`<button class="prim-btn" data-action="next-level">➡ Ниво ${L.n+1}</button>`:'<div style="color:#6c5ce7;font-weight:bold;font-size:15px;">🏅 Всички нива завършени!</div>'}
+        <button class="sec-btn" data-action="restart">🔄 Пак</button>
+        <button class="sec-btn" data-action="pick-level">🗂 Нива</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+/* ---- EVENTS ---- */
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-action]');
+  if(b){
+    const a=b.getAttribute('data-action');
+    document.querySelectorAll('.overlay').forEach(o=>o.remove());
+    if(a==='start-level') startLevel(+b.getAttribute('data-id'));
+    else if(a==='restart') startLevel(curLevel.n);
+    else if(a==='next-level') startLevel(curLevel.n+1);
+    else if(a==='pick-level') renderSelect();
+    return;
+  }
+  const d=e.target.closest('[data-dir]');
+  if(d){
+    const dir=d.getAttribute('data-dir');
+    if(dir==='up') move(-1,0);
+    else if(dir==='down') move(1,0);
+    else if(dir==='left') move(0,-1);
+    else if(dir==='right') move(0,1);
+  }
+});
+
+document.addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key)) e.preventDefault();
+  if(e.key==='ArrowUp'||e.key==='w') move(-1,0);
+  else if(e.key==='ArrowDown'||e.key==='s') move(1,0);
+  else if(e.key==='ArrowLeft'||e.key==='a') move(0,-1);
+  else if(e.key==='ArrowRight'||e.key==='d') move(0,1);
+});
+
+let ts=null;
+document.addEventListener('touchstart',e=>{ts={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(!ts) return;
+  const dx=e.changedTouches[0].clientX-ts.x, dy=e.changedTouches[0].clientY-ts.y;
+  const adx=Math.abs(dx), ady=Math.abs(dy);
+  if(Math.max(adx,ady)<35){ts=null;return;}
+  if(adx>ady) dx>0?move(0,1):move(0,-1);
+  else dy>0?move(1,0):move(-1,0);
+  ts=null;
+},{passive:true});
+
+renderSelect();
+</script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Геометрични фигури – Сравняване</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #a8edea, #fed6e3);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px;
+    overflow-x: hidden;
+  }
+  h1 {
+    font-size: clamp(1.3rem, 5vw, 2rem);
+    color: #5a2d82;
+    text-align: center;
+    margin-bottom: 6px;
+    text-shadow: 2px 2px 0 #fff;
+  }
+  #score-bar {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 10px;
+  }
+  #stars-display { font-size: 1.6rem; letter-spacing: 2px; }
+  #score-label {
+    font-size: 1.1rem; color: #5a2d82;
+    background: #fff8; border-radius: 20px; padding: 4px 16px;
+  }
+  #question-box {
+    background: #fffde7;
+    border-radius: 24px;
+    padding: 16px 24px;
+    text-align: center;
+    box-shadow: 0 4px 18px #0002;
+    margin-bottom: 14px;
+    width: 100%; max-width: 460px;
+  }
+  #question-text {
+    font-size: clamp(1rem, 4vw, 1.35rem);
+    color: #333;
+    margin-bottom: 12px;
+  }
+  #target-figure {
+    display: flex; justify-content: center;
+  }
+  #choices {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    width: 100%; max-width: 460px;
+    margin-bottom: 10px;
+  }
+  .choice-btn {
+    background: #fff;
+    border: 4px solid #c9b8e8;
+    border-radius: 20px;
+    padding: 14px 8px 10px;
+    cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+    font-weight: 700;
+    color: #5a2d82;
+    transition: transform .15s, border-color .15s, background .15s;
+    box-shadow: 0 3px 10px #0001;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .choice-btn:hover { transform: scale(1.06); border-color: #a06ecf; }
+  .choice-btn.correct {
+    background: #d4ffd4; border-color: #3cb371;
+    animation: pop .4s;
+  }
+  .choice-btn.wrong {
+    background: #ffd4d4; border-color: #e00055;
+    animation: shake .4s;
+  }
+  .choice-btn:disabled { cursor: default; }
+  @keyframes pop {
+    0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1.06)}
+  }
+  @keyframes shake {
+    0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)}
+  }
+  #feedback {
+    font-size: clamp(1.2rem, 5vw, 1.7rem);
+    min-height: 2.2rem;
+    text-align: center;
+    font-weight: 900;
+    color: #5a2d82;
+    margin-bottom: 6px;
+  }
+  #next-btn {
+    display: none;
+    margin: 0 auto 8px;
+    background: linear-gradient(135deg,#f7971e,#ffd200);
+    color: #5a2d82;
+    border: none; border-radius: 30px;
+    padding: 12px 38px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.15rem; font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 14px #f7971e55;
+    transition: transform .15s;
+  }
+  #next-btn:hover { transform: scale(1.07); }
+  #end-screen {
+    display: none;
+    flex-direction: column; align-items: center;
+    background: #fffde7; border-radius: 28px;
+    padding: 32px 28px; text-align: center;
+    box-shadow: 0 6px 24px #0002;
+    max-width: 420px; width: 100%;
+  }
+  #end-screen h2 { font-size: 2rem; color: #5a2d82; margin-bottom: 10px; }
+  #end-score { font-size: 1.3rem; color: #333; margin-bottom: 18px; }
+  #restart-btn {
+    background: linear-gradient(135deg,#43e97b,#38f9d7);
+    color: #fff; border: none; border-radius: 30px;
+    padding: 13px 40px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.2rem; font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 14px #43e97b55;
+    transition: transform .15s;
+  }
+  #restart-btn:hover { transform: scale(1.07); }
+  .stars-anim {
+    font-size: 2.5rem;
+    animation: floatStar 1s ease-out forwards;
+    position: fixed; pointer-events: none; z-index: 999;
+  }
+  @keyframes floatStar {
+    0%{opacity:1;transform:translateY(0) scale(1)}
+    100%{opacity:0;transform:translateY(-90px) scale(1.6)}
+  }
+  #progress {
+    font-size: 0.95rem; color: #9b59b6;
+    margin-bottom: 4px;
+  }
+</style>
+</head>
+<body>
+
+<h1>🔷 Геометрични фигури 🔷</h1>
+<div id="score-bar">
+  <div id="stars-display">⭐⭐⭐</div>
+  <div id="score-label">Точки: <span id="score">0</span></div>
+</div>
+
+<div id="game-area">
+  <div id="question-box">
+    <div id="question-text">Намери същата фигура!</div>
+    <div id="target-figure"></div>
+  </div>
+  <div id="progress"></div>
+  <div id="choices"></div>
+  <div id="feedback"></div>
+  <button id="next-btn" onclick="nextQuestion()">Напред ➡️</button>
+</div>
+
+<div id="end-screen">
+  <h2>🎉 Браво! 🎉</h2>
+  <div id="end-score"></div>
+  <button id="restart-btn" onclick="startGame()">🔄 Играй отново</button>
+</div>
+
+<script>
+const SHAPES = [
+  {
+    name: "Кръг", id: "circle", color: "#FF6B6B",
+    draw: (s, c) => `<svg width="${s}" height="${s}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="42" fill="${c}" stroke="#fff" stroke-width="4"/>
+      <circle cx="35" cy="38" r="8" fill="#fff4" />
+    </svg>`
+  },
+  {
+    name: "Квадрат", id: "square", color: "#4ECDC4",
+    draw: (s, c) => `<svg width="${s}" height="${s}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <rect x="8" y="8" width="84" height="84" rx="8" fill="${c}" stroke="#fff" stroke-width="4"/>
+      <rect x="16" y="16" width="28" height="14" rx="4" fill="#fff3"/>
+    </svg>`
+  },
+  {
+    name: "Триъгълник", id: "triangle", color: "#FFE66D",
+    draw: (s, c) => `<svg width="${s}" height="${s}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="50,6 96,94 4,94" fill="${c}" stroke="#fff" stroke-width="4"/>
+      <ellipse cx="50" cy="30" rx="10" ry="5" fill="#fff3" transform="rotate(-15 50 30)"/>
+    </svg>`
+  },
+  {
+    name: "Правоъгълник", id: "rectangle", color: "#A29BFE",
+    draw: (s, c) => `<svg width="${s}" height="${Math.round(s*0.67)}" viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="6" width="108" height="68" rx="8" fill="${c}" stroke="#fff" stroke-width="4"/>
+      <rect x="14" y="12" width="36" height="14" rx="4" fill="#fff3"/>
+    </svg>`
+  },
+
+];
+
+const COLORS = ["#FF6B6B","#4ECDC4","#FFE66D","#A29BFE","#FD79A8","#55EFC4","#F0932B","#6C5CE7","#00B894","#E17055"];
+const TOTAL_ROUNDS = 8;
+let score = 0, round = 0, answered = false;
+
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(a) { return [...a].sort(() => Math.random() - .5); }
+
+function drawShape(shape, size, color) {
+  return shape.draw(size || 90, color || shape.color);
+}
+
+function startGame() {
+  score = 0; round = 0; answered = false;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('stars-display').textContent = '⭐⭐⭐';
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('game-area').style.display = 'block';
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').style.display = 'none';
+  nextQuestion();
+}
+
+function nextQuestion() {
+  if (round >= TOTAL_ROUNDS) { endGame(); return; }
+  answered = false;
+  round++;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('progress').textContent = `Въпрос ${round} от ${TOTAL_ROUNDS}`;
+
+  const targetShape = rand(SHAPES);
+  const targetColor = rand(COLORS);
+
+  document.getElementById('target-figure').innerHTML = drawShape(targetShape, 110, targetColor);
+  document.getElementById('question-text').textContent = '👇 Намери същата фигура!';
+
+  const wrongShapes = shuffle(SHAPES.filter(s => s.id !== targetShape.id)).slice(0, 3);
+  const correctColor = rand(COLORS.filter(c => c !== targetColor));
+
+  const choices = shuffle([
+    { shape: targetShape, color: correctColor, correct: true },
+    { shape: wrongShapes[0], color: rand(COLORS), correct: false },
+    { shape: wrongShapes[1], color: rand(COLORS), correct: false },
+    { shape: wrongShapes[2], color: rand(COLORS), correct: false },
+  ]);
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.innerHTML = drawShape(ch.shape, 80, ch.color) + `<span>${ch.shape.name}</span>`;
+    btn.onclick = () => handleAnswer(btn, ch.correct);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function handleAnswer(btn, correct) {
+  if (answered) return;
+  answered = true;
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+  if (correct) {
+    btn.classList.add('correct');
+    score++;
+    document.getElementById('score').textContent = score;
+    document.getElementById('feedback').textContent = rand([
+      '🌟 Браво! Правилно!', '⭐ Чудесно!', '🎉 Отлично!', '💫 Супер!', '👏 Много добре!'
+    ]);
+    updateStars();
+    spawnStar(btn);
+  } else {
+    btn.classList.add('wrong');
+    document.getElementById('feedback').textContent = rand([
+      '😊 Опитай пак!', '🙂 Почти! Продължи!', '💪 Следващия път!'
+    ]);
+  }
+
+  setTimeout(() => {
+    if (round < TOTAL_ROUNDS) {
+      document.getElementById('next-btn').style.display = 'block';
+    } else {
+      setTimeout(endGame, 900);
+    }
+  }, 600);
+}
+
+function updateStars() {
+  const pct = score / round;
+  document.getElementById('stars-display').textContent =
+    pct < 0.4 ? '⭐' : pct < 0.7 ? '⭐⭐' : '⭐⭐⭐';
+}
+
+function spawnStar(btn) {
+  const rect = btn.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'stars-anim';
+  el.textContent = '⭐';
+  el.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+  el.style.top = (rect.top + window.scrollY) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1100);
+}
+
+function endGame() {
+  document.getElementById('game-area').style.display = 'none';
+  const end = document.getElementById('end-screen');
+  end.style.display = 'flex';
+  const pct = score / TOTAL_ROUNDS;
+  const msg = pct === 1   ? '🏆 Перфектен резултат! Ти си шампион!' :
+              pct >= 0.75 ? '🌟 Страхотно се справи!' :
+              pct >= 0.5  ? '😊 Добра работа, продължавай!' :
+                            '💪 Опитай отново, можеш по-добре!';
+  document.getElementById('end-score').innerHTML =
+    `Верни отговори: <b>${score} от ${TOTAL_ROUNDS}</b><br><br>${msg}<br><br>${'⭐'.repeat(Math.round(pct * 5))}`;
+}
+
+startGame();
+</script>
+</body>
+</html>

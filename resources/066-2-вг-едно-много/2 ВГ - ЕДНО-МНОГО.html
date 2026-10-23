@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Едно и Много - Математическа игра</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .score {
+            text-align: center;
+            font-size: 1.8em;
+            color: #764ba2;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .image-container {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-radius: 20px;
+            padding: 60px;
+            margin-bottom: 40px;
+            min-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .item {
+            font-size: 80px;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        button {
+            font-size: 2em;
+            padding: 25px 50px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+        }
+
+        button:active {
+            transform: translateY(-2px);
+        }
+
+        .btn-one {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: white;
+        }
+
+        .btn-many {
+            background: linear-gradient(135deg, #fd79a8, #e84393);
+            color: white;
+        }
+
+        .btn-new {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            font-size: 1.5em;
+            padding: 15px 40px;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 2.5em;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .correct {
+            color: #00b894;
+            animation: bounce 0.6s;
+        }
+
+        .incorrect {
+            color: #e84393;
+            animation: shake 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .stars {
+            position: absolute;
+            font-size: 40px;
+            animation: starFloat 1s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes starFloat {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            
+            button {
+                font-size: 1.5em;
+                padding: 20px 30px;
+            }
+            
+            .item {
+                font-size: 60px;
+            }
+            
+            .feedback {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎈 Едно и Много 🎈</h1>
+        <div class="score">Точки: <span id="score">0</span></div>
+        
+        <div class="image-container" id="imageContainer"></div>
+        
+        <div class="buttons">
+            <button class="btn-one" onclick="checkAnswer('one')">ЕДНО ☝️</button>
+            <button class="btn-many" onclick="checkAnswer('many')">МНОГО 🙌</button>
+        </div>
+        
+        <div class="feedback" id="feedback"></div>
+        
+        <div style="text-align: center;">
+            <button class="btn-new" onclick="newGame()">🔄 Нова игра</button>
+        </div>
+    </div>
+
+    <script>
+        const items = ['🎈', '🍎', '🌸', '⭐', '🦋', '🍓', '🌈', '🐝', '🌺', '🍊'];
+        let currentAnswer = '';
+        let score = 0;
+
+        function generateQuestion() {
+            const container = document.getElementById('imageContainer');
+            const feedback = document.getElementById('feedback');
+            container.innerHTML = '';
+            feedback.innerHTML = '';
+            
+            const isOne = Math.random() < 0.5;
+            const item = items[Math.floor(Math.random() * items.length)];
+            const count = isOne ? 1 : Math.floor(Math.random() * 6) + 3;
+            
+            currentAnswer = isOne ? 'one' : 'many';
+            
+            for (let i = 0; i < count; i++) {
+                const span = document.createElement('span');
+                span.className = 'item';
+                span.textContent = item;
+                span.style.animationDelay = (i * 0.1) + 's';
+                container.appendChild(span);
+            }
+        }
+
+        function createStars(x, y) {
+            const container = document.getElementById('imageContainer');
+            for (let i = 0; i < 5; i++) {
+                const star = document.createElement('div');
+                star.className = 'stars';
+                star.textContent = '⭐';
+                star.style.left = (x + Math.random() * 100 - 50) + 'px';
+                star.style.top = (y + Math.random() * 50 - 25) + 'px';
+                container.appendChild(star);
+                
+                setTimeout(() => star.remove(), 1000);
+            }
+        }
+
+        function checkAnswer(answer) {
+            const feedback = document.getElementById('feedback');
+            const rect = document.getElementById('imageContainer').getBoundingClientRect();
+            
+            if (answer === currentAnswer) {
+                score++;
+                document.getElementById('score').textContent = score;
+                feedback.className = 'feedback correct';
+                feedback.textContent = '🎉 Браво! Супер! 🌟';
+                
+                createStars(rect.width / 2, rect.height / 2);
+                
+                setTimeout(() => {
+                    generateQuestion();
+                }, 1500);
+            } else {
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '💝 Опитай пак! Можеш! 💪';
+                
+                setTimeout(() => {
+                    feedback.innerHTML = '';
+                }, 2000);
+            }
+        }
+
+        function newGame() {
+            score = 0;
+            document.getElementById('score').textContent = score;
+            generateQuestion();
+        }
+
+        generateQuestion();
+    </script>
+</body>
+</html>

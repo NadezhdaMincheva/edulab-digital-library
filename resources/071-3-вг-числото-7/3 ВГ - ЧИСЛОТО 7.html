@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Магическото число 7</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    user-select: none;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .header h1 {
+    font-size: 2.2em;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    margin-bottom: 4px;
+  }
+  .big-number {
+    font-size: 5em;
+    font-weight: 900;
+    color: #FFD700;
+    text-shadow: 3px 3px 0 #FF8C00, 5px 5px 10px rgba(0,0,0,0.3);
+    line-height: 1;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  .score-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+  .score-box {
+    background: rgba(255,255,255,0.2);
+    border-radius: 16px;
+    padding: 8px 20px;
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: 700;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+  .stars-row { display: flex; gap: 4px; font-size: 1.5em; }
+  .game-card {
+    background: #fff;
+    border-radius: 28px;
+    padding: 24px 20px 20px;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .module-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .tab {
+    background: #f0eeff;
+    border: 2px solid #c4b5fd;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: #7c3aed;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: #7c3aed;
+    color: #fff;
+    border-color: #7c3aed;
+    transform: scale(1.05);
+  }
+  .question-area {
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .question-text {
+    font-size: 1.4em;
+    font-weight: 700;
+    color: #3730a3;
+    margin-bottom: 10px;
+    min-height: 50px;
+  }
+  .objects-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 10px 0;
+    min-height: 80px;
+  }
+  .obj-btn {
+    font-size: 2em;
+    background: #f5f3ff;
+    border: 3px solid #ddd6fe;
+    border-radius: 14px;
+    width: 62px; height: 62px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .obj-btn:hover { transform: scale(1.1); background: #ede9fe; }
+  .obj-btn.selected { border-color: #7c3aed; background: #ede9fe; transform: scale(1.08); }
+  .obj-btn.correct { border-color: #16a34a; background: #dcfce7; animation: bounce 0.4s; }
+  .obj-btn.wrong { border-color: #dc2626; background: #fee2e2; animation: shake 0.4s; }
+  @keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  .choices-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin: 10px 0;
+  }
+  .choice-btn {
+    background: #f5f3ff;
+    border: 3px solid #ddd6fe;
+    border-radius: 18px;
+    padding: 14px 24px;
+    font-size: 2em;
+    font-weight: 900;
+    color: #4c1d95;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 80px;
+  }
+  .choice-btn:hover { transform: scale(1.1); background: #ede9fe; }
+  .choice-btn.correct { border-color: #16a34a; background: #dcfce7; color: #16a34a; }
+  .choice-btn.wrong { border-color: #dc2626; background: #fee2e2; color: #dc2626; }
+
+  .group-container {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 8px 0;
+  }
+  .group-card {
+    background: #f5f3ff;
+    border: 3px solid #ddd6fe;
+    border-radius: 18px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    min-width: 100px;
+  }
+  .group-card:hover { transform: scale(1.05); background: #ede9fe; border-color: #7c3aed; }
+  .group-card.correct { border-color: #16a34a; background: #dcfce7; }
+  .group-card.wrong { border-color: #dc2626; background: #fee2e2; }
+  .group-emojis { font-size: 1.5em; line-height: 1.6; margin-bottom: 4px; }
+  .group-count { font-size: 1.8em; font-weight: 900; color: #4c1d95; }
+
+  .number-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+  .num-box {
+    background: #f5f3ff;
+    border: 3px solid #ddd6fe;
+    border-radius: 14px;
+    width: 56px; height: 56px;
+    font-size: 1.8em;
+    font-weight: 900;
+    color: #4c1d95;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .num-box:hover { transform: scale(1.1); background: #ede9fe; }
+  .num-box.highlight { background: #fef9c3; border-color: #eab308; animation: pulse 1s infinite; }
+  .num-box.correct { border-color: #16a34a; background: #dcfce7; color: #16a34a; }
+  .num-box.wrong { border-color: #dc2626; background: #fee2e2; color: #dc2626; }
+
+  .feedback {
+    font-size: 1.6em;
+    font-weight: 900;
+    text-align: center;
+    min-height: 44px;
+    margin: 6px 0;
+    transition: all 0.3s;
+  }
+  .feedback.correct { color: #16a34a; }
+  .feedback.wrong { color: #dc2626; }
+
+  .next-btn {
+    display: block;
+    margin: 10px auto 0;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 12px 40px;
+    font-size: 1.2em;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(124,58,237,0.4);
+    transition: all 0.2s;
+  }
+  .next-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(124,58,237,0.6); }
+
+  .celebration {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(124,58,237,0.92);
+    z-index: 100;
+    display: none;
+  }
+  .celebration.show { display: flex; }
+  .cel-text { font-size: 3em; font-weight: 900; color: #FFD700; text-align: center; margin-bottom: 10px; text-shadow: 2px 2px 0 #FF8C00; }
+  .confetti { font-size: 4em; animation: spin 1s linear infinite; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .cel-score { font-size: 1.8em; color: #fff; margin: 10px 0; }
+  .restart-btn {
+    background: #FFD700;
+    color: #4c1d95;
+    border: none;
+    border-radius: 20px;
+    padding: 14px 44px;
+    font-size: 1.3em;
+    font-weight: 900;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: all 0.2s;
+  }
+  .restart-btn:hover { transform: scale(1.08); }
+  .progress-bar {
+    background: #e0d9ff;
+    border-radius: 10px;
+    height: 10px;
+    width: 100%;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, #7c3aed, #a78bfa);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="big-number">7</div>
+  <h1>Магическото число 7</h1>
+</div>
+
+<div class="score-bar">
+  <div class="score-box">⭐ <span id="score">0</span></div>
+  <div class="score-box">❓ <span id="qnum">1</span>/12</div>
+</div>
+
+<div class="game-card">
+  <div class="module-tabs" id="tabs"></div>
+  <div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+  <div class="question-area" id="questionArea"></div>
+  <div class="feedback" id="feedback"></div>
+  <button class="next-btn" id="nextBtn" style="display:none" onclick="nextQuestion()">Напред ➡️</button>
+</div>
+
+<div class="celebration" id="celebration">
+  <div class="confetti">🎉</div>
+  <div class="cel-text">Браво! Много добре! 🌟</div>
+  <div class="cel-score">Спечели <span id="finalScore"></span> звезди!</div>
+  <div style="font-size:2em;margin:8px 0">⭐⭐⭐⭐⭐⭐⭐</div>
+  <button class="restart-btn" onclick="restartGame()">🔄 Играй отново</button>
+</div>
+
+<script>
+const EMOJIS = ['🍎','🌟','🐶','🌸','🎈','🍓','🦋','🐱','🌈','🍌','🐸','🎀'];
+const MODULES = [
+  {name:'🔢 Покажи 7', id:'show7'},
+  {name:'🔍 Намери 7', id:'find7'},
+  {name:'📏 Нареди', id:'order'},
+  {name:'⚖️ Сравни', id:'compare'}
+];
+
+let score = 0, qnum = 0, totalQ = 12, currentModule = 0, answered = false;
+let questions = [];
+
+function shuffle(a) { return [...a].sort(()=>Math.random()-0.5); }
+function rand(min,max) { return Math.floor(Math.random()*(max-min+1))+min; }
+
+function buildQuestions() {
+  let qs = [];
+  // Module 0: show7 - tap items one by one to count to 7
+  for(let i=0;i<3;i++) {
+    let emoji = EMOJIS[rand(0,EMOJIS.length-1)];
+    let total = rand(6,10);
+    qs.push({type:'show7', emoji, total});
+  }
+  // Module 1: find7 - which group has 7
+  for(let i=0;i<3;i++) {
+    let emoji = EMOJIS[rand(0,EMOJIS.length-1)];
+    let groups = shuffle([7, rand(4,6), rand(8,10), rand(1,3)]).slice(0,3);
+    if(!groups.includes(7)) groups[rand(0,2)] = 7;
+    qs.push({type:'find7', emoji, groups});
+  }
+  // Module 2: order - place 7 in sequence
+  for(let i=0;i<3;i++) {
+    let start = rand(1,5);
+    let nums = Array.from({length:7},(_,j)=>start+j);
+    let idx7 = nums.indexOf(7);
+    qs.push({type:'order', nums, idx7});
+  }
+  // Module 3: compare - more/less than 7
+  for(let i=0;i<3;i++) {
+    let choices = shuffle([5,6,7,8,9,3,10,4]).slice(0,4);
+    if(!choices.includes(7)) choices[rand(0,3)] = 7;
+    let task = Math.random()>0.5 ? 'more' : 'less';
+    qs.push({type:'compare', choices, task});
+  }
+  return shuffle(qs);
+}
+
+function renderTabs() {
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = MODULES.map((m,i)=>`
+    <div class="tab ${i===currentModule?'active':''}" onclick="switchModule(${i})">${m.name}</div>
+  `).join('');
+}
+
+function switchModule(idx) {
+  currentModule = idx;
+  renderTabs();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[qnum];
+  if(!q) return;
+  answered = false;
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('nextBtn').style.display = 'none';
+  document.getElementById('qnum').textContent = (qnum+1);
+  document.getElementById('progress').style.width = (qnum/totalQ*100)+'%';
+
+  // Auto-switch tab based on question type
+  const typeMap = {show7:0, find7:1, order:2, compare:3};
+  if(typeMap[q.type] !== undefined) { currentModule = typeMap[q.type]; renderTabs(); }
+
+  const area = document.getElementById('questionArea');
+  if(q.type === 'show7') renderShow7(q, area);
+  else if(q.type === 'find7') renderFind7(q, area);
+  else if(q.type === 'order') renderOrder(q, area);
+  else if(q.type === 'compare') renderCompare(q, area);
+}
+
+function renderShow7(q, area) {
+  let selected = 0;
+  area.innerHTML = `
+    <div class="question-text">🖐 Натисни точно 7 ${q.emoji}!</div>
+    <div class="question-text" style="font-size:1em;color:#6d28d9">Избрани: <span id="selCount" style="font-size:1.5em;font-weight:900">0</span> / 7</div>
+    <div class="objects-grid" id="objGrid"></div>
+  `;
+  const grid = document.getElementById('objGrid');
+  let btns = [];
+  for(let i=0;i<q.total;i++) {
+    const btn = document.createElement('button');
+    btn.className = 'obj-btn';
+    btn.textContent = q.emoji;
+    btn.dataset.idx = i;
+    btn.onclick = function() {
+      if(answered) return;
+      if(btn.classList.contains('selected')) {
+        btn.classList.remove('selected');
+        selected--;
+      } else {
+        btn.classList.add('selected');
+        selected++;
+      }
+      document.getElementById('selCount').textContent = selected;
+      if(selected === 7) {
+        answered = true;
+        btns.forEach(b => {
+          if(b.classList.contains('selected')) b.classList.add('correct');
+          else b.style.opacity = '0.3';
+        });
+        showFeedback(true);
+        gainScore();
+      } else if(selected > 7) {
+        answered = true;
+        btns.forEach(b => b.classList.contains('selected') ? b.classList.add('wrong') : null);
+        showFeedback(false);
+      }
+    };
+    btns.push(btn);
+    grid.appendChild(btn);
+  }
+}
+
+function renderFind7(q, area) {
+  area.innerHTML = `
+    <div class="question-text">👀 Коя група има точно 7 предмета?</div>
+    <div class="group-container" id="groupCont"></div>
+  `;
+  const cont = document.getElementById('groupCont');
+  q.groups.forEach(n => {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    let emojis = '';
+    for(let i=0;i<n;i++) emojis += EMOJIS[i % EMOJIS.length] + (i%4===3?'<br>':'');
+    card.innerHTML = `<div class="group-emojis">${emojis}</div><div class="group-count">${n}</div>`;
+    card.onclick = function() {
+      if(answered) return;
+      answered = true;
+      if(n === 7) {
+        card.classList.add('correct');
+        showFeedback(true);
+        gainScore();
+      } else {
+        card.classList.add('wrong');
+        cont.querySelectorAll('.group-card').forEach(c => {
+          if(parseInt(c.querySelector('.group-count').textContent)===7) c.classList.add('correct');
+        });
+        showFeedback(false);
+      }
+    };
+    cont.appendChild(card);
+  });
+}
+
+function renderOrder(q, area) {
+  area.innerHTML = `
+    <div class="question-text">🔢 Натисни числото 7 там, където му е мястото!</div>
+    <div class="number-row" id="numRow"></div>
+  `;
+  const row = document.getElementById('numRow');
+  q.nums.forEach((n, i) => {
+    const box = document.createElement('div');
+    box.className = 'num-box' + (n===7?' highlight':'');
+    box.textContent = n;
+    if(n !== 7) box.style.pointerEvents = 'none';
+    box.onclick = function() {
+      if(answered || n !== 7) return;
+      answered = true;
+      box.classList.remove('highlight');
+      box.classList.add('correct');
+      // Show if they clicked on correct position (always correct here since 7 IS the number)
+      showFeedback(true);
+      gainScore();
+    };
+    row.appendChild(box);
+  });
+}
+
+function renderCompare(q, area) {
+  const taskText = q.task === 'more'
+    ? '⬆️ Натисни число, което е <span style="color:#16a34a">ПОВЕЧЕ</span> от 7!'
+    : '⬇️ Натисни число, което е <span style="color:#dc2626">ПО-МАЛКО</span> от 7!';
+  area.innerHTML = `
+    <div class="question-text">${taskText}</div>
+    <div style="font-size:1.1em;color:#6d28d9;margin-bottom:8px">Числото 7 е тук: <b>1 2 3 4 5 6 <span style="color:#7c3aed;font-size:1.4em;font-weight:900">7</span> 8 9 10</b></div>
+    <div class="choices-grid" id="choiceGrid"></div>
+  `;
+  const grid = document.getElementById('choiceGrid');
+  q.choices.forEach(n => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = n;
+    btn.onclick = function() {
+      if(answered) return;
+      answered = true;
+      const correct = q.task==='more' ? n>7 : n<7;
+      if(correct) {
+        btn.classList.add('correct');
+        showFeedback(true);
+        gainScore();
+      } else {
+        btn.classList.add('wrong');
+        grid.querySelectorAll('.choice-btn').forEach(b => {
+          const bv = parseInt(b.textContent);
+          const bc = q.task==='more' ? bv>7 : bv<7;
+          if(bc) b.classList.add('correct');
+        });
+        showFeedback(false);
+      }
+    };
+    grid.appendChild(btn);
+  });
+}
+
+const PRAISES = ['🌟 Браво!','🎉 Страхотно!','⭐ Чудесно!','🏆 Отлично!','🌈 Перфектно!'];
+const WRONGS = ['💪 Опитай пак!','🤔 Хайде отново!','❤️ Почти! Опитай!'];
+
+function showFeedback(ok) {
+  const fb = document.getElementById('feedback');
+  if(ok) {
+    fb.textContent = PRAISES[rand(0,PRAISES.length-1)];
+    fb.className = 'feedback correct';
+  } else {
+    fb.textContent = WRONGS[rand(0,WRONGS.length-1)];
+    fb.className = 'feedback wrong';
+  }
+  document.getElementById('nextBtn').style.display = 'block';
+}
+
+function gainScore() {
+  score++;
+  document.getElementById('score').textContent = score;
+}
+
+function nextQuestion() {
+  qnum++;
+  if(qnum >= totalQ) {
+    endGame();
+  } else {
+    renderQuestion();
+  }
+}
+
+function endGame() {
+  document.getElementById('progress').style.width = '100%';
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('celebration').classList.add('show');
+}
+
+function restartGame() {
+  score = 0; qnum = 0; answered = false;
+  document.getElementById('score').textContent = 0;
+  document.getElementById('celebration').classList.remove('show');
+  questions = buildQuestions();
+  renderTabs();
+  renderQuestion();
+}
+
+// Init
+questions = buildQuestions();
+renderTabs();
+renderQuestion();
+</script>
+</body>
+</html>

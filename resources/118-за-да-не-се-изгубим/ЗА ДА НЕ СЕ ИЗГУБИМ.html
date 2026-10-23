@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>За да не се изгубим</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stars {
+            font-size: 2em;
+            margin: 20px 0;
+        }
+
+        .star {
+            display: inline-block;
+            color: #ddd;
+            transition: all 0.3s;
+        }
+
+        .star.filled {
+            color: #ffd700;
+            transform: scale(1.2);
+        }
+
+        .scenario {
+            background: linear-gradient(135deg, #f6f9fc 0%, #e9f2f9 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .scenario-image {
+            text-align: center;
+            font-size: 5em;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .question {
+            font-size: 1.5em;
+            color: #333;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .option {
+            background: white;
+            border: 4px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            background: #f0f4ff;
+        }
+
+        .option.correct {
+            background: #4ade80;
+            border-color: #22c55e;
+            color: white;
+            animation: celebrate 0.5s;
+        }
+
+        .option.wrong {
+            background: #f87171;
+            border-color: #ef4444;
+            color: white;
+            animation: shake 0.5s;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.5em;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .feedback.correct {
+            background: #4ade80;
+            color: white;
+        }
+
+        .feedback.wrong {
+            background: #f87171;
+            color: white;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 20px 40px;
+            font-size: 1.3em;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .next-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .completion {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .completion h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .completion-emoji {
+            font-size: 6em;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 За да не се изгубим 🧭</h1>
+            <div class="stars" id="stars">
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+                <span class="star">⭐</span>
+            </div>
+        </div>
+
+        <div id="game-content"></div>
+    </div>
+
+    <script>
+        const scenarios = [
+            {
+                emoji: "👦",
+                question: "Изгубил си се в парка. Какво трябва да кажеш на възрастен, който иска да ти помогне?",
+                options: [
+                    { text: "Не казвам нищо и се крия", correct: false },
+                    { text: "Казвам си името, адреса и телефон на родителите", correct: true },
+                    { text: "Започвам да плача и бягам", correct: false }
+                ],
+                feedback: {
+                    correct: "Браво! Винаги трябва да знаеш името си, адреса си и телефона на родителите си! 🎉",
+                    wrong: "Опитай пак! Трябва да кажеш името си и адреса си на възрастен, който може да помогне."
+                }
+            },
+            {
+                emoji: "🏪",
+                question: "Изгубил си се на улицата. Какво виждаш около себе си, което може да помогне?",
+                options: [
+                    { text: "Само асфалт", correct: false },
+                    { text: "Имена на улици, магазини, сгради с номера", correct: true },
+                    { text: "Само коли", correct: false }
+                ],
+                feedback: {
+                    correct: "Отлично! Наблюдавай имената на улиците, магазините и номерата на сградите! 🎈",
+                    wrong: "Помисли още! Погледни наоколо - какви надписи и номера виждаш?"
+                }
+            },
+            {
+                emoji: "📞",
+                question: "Кой е спешният телефон, на който можеш да се обадиш ако си изгубен?",
+                options: [
+                    { text: "123", correct: false },
+                    { text: "112", correct: true },
+                    { text: "999", correct: false }
+                ],
+                feedback: {
+                    correct: "Браво! 112 е спешният номер! Запомни го добре! 🚨",
+                    wrong: "Опитай отново! Спешният номер е 112."
+                }
+            },
+            {
+                emoji: "👮",
+                question: "Кой може да ти помогне, ако се изгубиш?",
+                options: [
+                    { text: "Непознат човек, който седи сам", correct: false },
+                    { text: "Полицай, родител с деца, служител в магазин", correct: true },
+                    { text: "Никой не може да помогне", correct: false }
+                ],
+                feedback: {
+                    correct: "Чудесно! Търси полицай, родители с деца или служители в магазини! 👏",
+                    wrong: "Помисли добре! Кой е сигурен човек, на когото можеш да се доверишь?"
+                }
+            },
+            {
+                emoji: "🚦",
+                question: "Какво означава червената светлина на светофора?",
+                options: [
+                    { text: "Мога да минавам", correct: false },
+                    { text: "Трябва да чакам и да не минавам", correct: true },
+                    { text: "Трябва да бягам бързо", correct: false }
+                ],
+                feedback: {
+                    correct: "Браво! Червената светлина означава СТОЙ! 🚦",
+                    wrong: "Опитай пак! Червеното винаги означава, че трябва да спреш."
+                }
+            }
+        ];
+
+        let currentScenario = 0;
+        let score = 0;
+        let answered = false;
+
+        function updateStars() {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < score) {
+                    star.classList.add('filled');
+                } else {
+                    star.classList.remove('filled');
+                }
+            });
+        }
+
+        function showScenario(index) {
+            answered = false;
+            const scenario = scenarios[index];
+            const content = document.getElementById('game-content');
+            
+            content.innerHTML = `
+                <div class="scenario">
+                    <div class="scenario-image">${scenario.emoji}</div>
+                    <div class="question">${scenario.question}</div>
+                    <div class="options">
+                        ${scenario.options.map((option, i) => `
+                            <div class="option" onclick="checkAnswer(${i}, ${option.correct})">${option.text}</div>
+                        `).join('')}
+                    </div>
+                    <div id="feedback"></div>
+                </div>
+            `;
+        }
+
+        function checkAnswer(optionIndex, isCorrect) {
+            if (answered) return;
+            answered = true;
+
+            const options = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            const scenario = scenarios[currentScenario];
+
+            options[optionIndex].classList.add(isCorrect ? 'correct' : 'wrong');
+            
+            if (isCorrect) {
+                score++;
+                updateStars();
+                feedback.innerHTML = `<div class="feedback correct">${scenario.feedback.correct}</div>`;
+            } else {
+                feedback.innerHTML = `<div class="feedback wrong">${scenario.feedback.wrong}</div>`;
+            }
+
+            options.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+
+            setTimeout(() => {
+                if (currentScenario < scenarios.length - 1) {
+                    const nextBtn = document.createElement('button');
+                    nextBtn.className = 'next-btn';
+                    nextBtn.textContent = 'Напред ➡️';
+                    nextBtn.onclick = () => {
+                        currentScenario++;
+                        showScenario(currentScenario);
+                    };
+                    feedback.appendChild(nextBtn);
+                } else {
+                    showCompletion();
+                }
+            }, 1500);
+        }
+
+        function showCompletion() {
+            const content = document.getElementById('game-content');
+            let message = '';
+            
+            if (score === 5) {
+                message = 'Невероятно! Знаеш всички правила! Ти си истински експерт! 🏆';
+            } else if (score >= 3) {
+                message = 'Много добре! Знаеш как да се пазиш! 🌟';
+            } else {
+                message = 'Добър опит! Нека играем още веднъж, за да научиш повече! 💪';
+            }
+
+            content.innerHTML = `
+                <div class="completion">
+                    <div class="completion-emoji">🎉</div>
+                    <h2>Браво!</h2>
+                    <p style="font-size: 1.5em; margin: 20px 0;">${message}</p>
+                    <p style="font-size: 2em; margin: 20px 0;">Твоят резултат: ${score} от 5 ⭐</p>
+                    <button class="next-btn" onclick="restartGame()">Играй отново 🔄</button>
+                </div>
+            `;
+        }
+
+        function restartGame() {
+            currentScenario = 0;
+            score = 0;
+            updateStars();
+            showScenario(0);
+        }
+
+        // Стартиране на играта
+        showScenario(0);
+    </script>
+</body>
+</html>

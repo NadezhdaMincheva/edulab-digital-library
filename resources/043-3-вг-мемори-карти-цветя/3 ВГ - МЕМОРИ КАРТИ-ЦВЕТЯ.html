@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мемори · Пролетни цветя</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3FBF0;
+    --navy:#2E4025;
+    --pink:#F17FA0;
+    --pink-dark:#D95E80;
+    --green:#6BBF59;
+    --green-dark:#4C9A3D;
+    --yellow:#FFC93C;
+    --lavender:#B79CED;
+    --card-back:#7FC8A9;
+    --card-back-dark:#59a884;
+    --card-shadow:0 8px 0 rgba(46,64,37,0.15);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Nunito',sans-serif;
+    color:var(--navy);
+    background:var(--bg);
+    background-image:
+      radial-gradient(circle at 8% 10%, rgba(255,201,60,0.28) 0, transparent 42%),
+      radial-gradient(circle at 92% 90%, rgba(241,127,160,0.22) 0, transparent 46%);
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  h1,h2,.display{font-family:'Baloo 2',cursive;}
+
+  header{
+    width:100%; max-width:820px; display:flex; flex-direction:column; align-items:center;
+    padding:20px 16px 6px; text-align:center;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-family:'Baloo 2',cursive; font-weight:700; font-size:1.4rem;}
+  .brand .hero{font-size:1.9rem;}
+  .subtitle{margin:2px 0 12px; font-weight:700; color:#5c6b52;}
+  .mute-btn{
+    border:none; background:white; box-shadow:var(--card-shadow); border-radius:999px;
+    padding:7px 16px; font-size:1rem; cursor:pointer; font-family:'Baloo 2',cursive; font-weight:700; margin-bottom:10px;
+  }
+
+  .stats-row{display:flex; gap:14px; flex-wrap:wrap; justify-content:center; margin-bottom:14px;}
+  .stat-pill{
+    background:white; border-radius:999px; padding:8px 18px; font-family:'Baloo 2',cursive;
+    font-weight:700; font-size:.95rem; box-shadow:var(--card-shadow); display:flex; align-items:center; gap:6px;
+  }
+
+  /* ---------- Gallery (intro) ---------- */
+  .gallery-wrap{
+    width:100%; max-width:820px; background:white; border-radius:28px; padding:26px 28px 30px;
+    box-shadow:0 16px 0 rgba(46,64,37,0.10); margin:6px 16px 24px; text-align:center;
+  }
+  .gallery-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:18px 0 22px;
+  }
+  @media (max-width:560px){ .gallery-grid{grid-template-columns:repeat(2,1fr);} }
+  .gallery-item{
+    background:var(--bg); border-radius:18px; padding:14px 10px; cursor:pointer; transition:transform .15s ease;
+  }
+  .gallery-item:hover{transform:translateY(-3px);}
+  .gallery-item svg{width:64px; height:64px;}
+  .gallery-item .name{display:block; margin-top:6px; font-family:'Baloo 2',cursive; font-weight:800; font-size:.95rem;}
+  .gallery-item .listen{font-size:.75rem; color:var(--pink-dark); font-weight:700;}
+
+  .start-btn{
+    border:none; background:var(--pink); color:white; font-family:'Baloo 2',cursive; font-weight:800;
+    font-size:1.15rem; padding:14px 34px; border-radius:999px; cursor:pointer; box-shadow:0 6px 0 var(--pink-dark);
+  }
+  .start-btn:active{transform:translateY(4px); box-shadow:none;}
+
+  /* ---------- Board ---------- */
+  .board{
+    width:100%; max-width:820px; display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    padding:6px 16px 20px; display:none;
+  }
+  .board.show{display:grid;}
+  @media (max-width:560px){ .board{grid-template-columns:repeat(3,1fr); gap:10px;} }
+
+  .card{ position:relative; aspect-ratio:3/4; perspective:900px; cursor:pointer; }
+  .card-inner{ position:relative; width:100%; height:100%; transition:transform .45s cubic-bezier(.4,.2,.2,1); transform-style:preserve-3d; }
+  .card.flipped .card-inner, .card.matched .card-inner{ transform:rotateY(180deg); }
+  .card-face{ position:absolute; inset:0; border-radius:16px; display:flex; flex-direction:column; align-items:center; justify-content:center; backface-visibility:hidden; box-shadow:var(--card-shadow); }
+  .card-back-face{ background:linear-gradient(135deg, var(--card-back), #a6dfc2); color:white; font-size:2.2rem; }
+  .card-back-face::after{ content:'🌱'; }
+  .card-front-face{ background:white; transform:rotateY(180deg); padding:6px; text-align:center; }
+  .card-front-face svg{ width:44px; height:44px; }
+  .card-front-face .word{ font-family:'Baloo 2',cursive; font-weight:800; font-size:.72rem; line-height:1.1; margin-top:2px; }
+  .card.matched .card-front-face{ background:#FFF5E9; animation:matchPop .4s ease; }
+  @keyframes matchPop{ 0%{transform:rotateY(180deg) scale(1);} 50%{transform:rotateY(180deg) scale(1.08);} 100%{transform:rotateY(180deg) scale(1);} }
+  .card.shake .card-inner{ animation:shake .4s ease; }
+  @keyframes shake{ 0%,100%{transform:rotateY(180deg) translateX(0);} 25%{transform:rotateY(180deg) translateX(-6px);} 75%{transform:rotateY(180deg) translateX(6px);} }
+
+  .controls{ display:none; gap:14px; margin:6px 0 26px; flex-wrap:wrap; justify-content:center; }
+  .controls.show{display:flex;}
+  .btn{ border:none; font-family:'Baloo 2',cursive; font-weight:700; font-size:1rem; padding:12px 24px; border-radius:999px; cursor:pointer; transition:all .15s ease; }
+  .btn.secondary{ background:white; color:var(--navy); box-shadow:var(--card-shadow); }
+  .btn.secondary:active{ transform:translateY(4px); box-shadow:none; }
+
+  .win-overlay{ position:fixed; inset:0; background:rgba(46,64,37,0.55); display:none; align-items:center; justify-content:center; z-index:50; padding:20px; }
+  .win-overlay.show{display:flex;}
+  .win-box{ background:white; border-radius:24px; padding:36px 32px; text-align:center; max-width:420px; box-shadow:0 20px 0 rgba(46,64,37,0.15); }
+  .win-box .big{font-size:4rem; margin-bottom:8px;}
+  .win-box h2{margin:0 0 6px;}
+  .win-box p{margin:0 0 18px; font-weight:700; color:#5c6b52;}
+
+  footer{text-align:center; padding:10px 16px 20px; font-size:.8rem; color:#8a9480;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="hero">🌷</span> Мемори: Пролетни цветя</div>
+  <p class="subtitle">Изобразително изкуство · Открий двойките цветя!</p>
+  <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊 Звук: Вкл.</button>
+  <div class="stats-row" id="statsRow" style="display:none;">
+    <div class="stat-pill">🔄 Опити: <span id="moves">0</span></div>
+    <div class="stat-pill">✅ Двойки: <span id="found">0</span> / 6</div>
+  </div>
+</header>
+
+<div class="gallery-wrap" id="galleryWrap">
+  <h2>Опознай цветята</h2>
+  <p class="subtitle">Докосни всяко цвете, за да чуеш името му</p>
+  <div class="gallery-grid" id="galleryGrid"></div>
+  <button class="start-btn" onclick="startGame()">🌼 Играй мемори</button>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="controls" id="controls">
+  <button class="btn secondary" onclick="initGame()">↺ Разбъркай отново</button>
+  <button class="btn secondary" onclick="showGallery()">🖼️ Виж цветята пак</button>
+</div>
+
+<footer>Мемори карти по изобразително изкуство · тема „Пролетни цветя“ · 6 двойки / 12 карти · за деца на 6 години</footer>
+
+<div class="win-overlay" id="winOverlay">
+  <div class="win-box">
+    <div class="big">🌸🌟</div>
+    <h2>Браво, малки художници!</h2>
+    <p>Открихте всички цветя за <span id="winMoves">0</span> опита!</p>
+    <button class="btn secondary" style="background:var(--pink); color:white; box-shadow:0 6px 0 var(--pink-dark);" onclick="initGame(); document.getElementById('winOverlay').classList.remove('show');">Играй пак</button>
+  </div>
+</div>
+
+<script>
+/* ---------- sound ---------- */
+let muted = false;
+function toggleMute(){
+  muted = !muted;
+  document.getElementById('muteBtn').textContent = muted ? '🔇 Звук: Изкл.' : '🔊 Звук: Вкл.';
+  if(muted && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+function speak(text){
+  if(muted || !('speechSynthesis' in window)) return;
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='bg-BG'; u.rate=0.88;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+let actx;
+function tone(freq, dur, type='sine'){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = actx.createOscillator(); const g = actx.createGain();
+    o.type=type; o.frequency.value=freq;
+    o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(0.15, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime+dur);
+    o.start(); o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+function playMatch(){ tone(660,.12); setTimeout(()=>tone(880,.18),120); }
+function playMiss(){ tone(220,.22,'sawtooth'); }
+function playWin(){ [523,659,784,1046].forEach((f,i)=> setTimeout(()=>tone(f,.22),i*150)); }
+
+/* ---------- flower SVG illustrations ---------- */
+function petalFlower(petal, center, size=64){
+  // simple 5-petal flower
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}">
+    <g transform="translate(50,50)">
+      ${[0,72,144,216,288].map(a=>`<ellipse cx="0" cy="-24" rx="14" ry="22" fill="${petal}" transform="rotate(${a})"/>`).join('')}
+      <circle cx="0" cy="0" r="13" fill="${center}"/>
+    </g>
+  </svg>`;
+}
+function trumpetFlower(petal, trumpet, size=64){
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}">
+    <g transform="translate(50,50)">
+      ${[0,60,120,180,240,300].map(a=>`<ellipse cx="0" cy="-22" rx="12" ry="20" fill="${petal}" stroke="#e8d98a" stroke-width="1" transform="rotate(${a})"/>`).join('')}
+      <ellipse cx="0" cy="0" rx="14" ry="11" fill="${trumpet}"/>
+    </g>
+  </svg>`;
+}
+function clusterFlower(petal, center, size=64){
+  const dots = [[-14,-20],[10,-22],[-18,0],[16,2],[-6,18],[12,20]];
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}">
+    <g transform="translate(50,46)">
+      <rect x="-3" y="18" width="6" height="26" fill="#6BBF59"/>
+      ${dots.map(([dx,dy])=>`<g transform="translate(${dx},${dy})">
+          ${[0,90,180,270].map(a=>`<ellipse cx="0" cy="-5" rx="4.5" ry="6" fill="${petal}" transform="rotate(${a})"/>`).join('')}
+          <circle r="2.6" fill="${center}"/>
+        </g>`).join('')}
+    </g>
+  </svg>`;
+}
+function bellFlower(petal, size=64){
+  return `<svg viewBox="0 0 100 100" width="${size}" height="${size}">
+    <g transform="translate(50,42)">
+      <rect x="-2.5" y="-30" width="5" height="34" fill="#6BBF59"/>
+      <path d="M0 2 C -16 2 -18 30 0 34 C 18 30 16 2 0 2 Z" fill="${petal}" stroke="#d8d8d8" stroke-width="1.5"/>
+      <path d="M-6 6 C -6 16 6 16 6 6 Z" fill="#8fd18a"/>
+      <ellipse cx="0" cy="-30" rx="7" ry="6" fill="#6BBF59"/>
+    </g>
+  </svg>`;
+}
+
+const FLOWERS = [
+  { key:'lale',    word:'Лале',     svg:petalFlower('#E85D75','#FFC93C') },
+  { key:'narcis',  word:'Нарцис',   svg:trumpetFlower('#FFFFFF','#FFA630') },
+  { key:'temenuga',word:'Теменуга', svg:petalFlower('#8E5FBF','#FFC93C') },
+  { key:'minzuhar',word:'Минзухар', svg:petalFlower('#B79CED','#FF8C42') },
+  { key:'zyumbyul',word:'Зюмбюл',   svg:clusterFlower('#C86FC9','#8E5FBF') },
+  { key:'kokiche', word:'Кокиче',   svg:bellFlower('#FFFFFF') },
+];
+
+/* ---------- gallery ---------- */
+function buildGallery(){
+  const grid = document.getElementById('galleryGrid');
+  grid.innerHTML = FLOWERS.map(f=>`
+    <div class="gallery-item" onclick="speak('${f.word}')">
+      ${f.svg}
+      <span class="name">${f.word}</span>
+      <span class="listen">🔊 чуй</span>
+    </div>`).join('');
+}
+function showGallery(){
+  document.getElementById('board').classList.remove('show');
+  document.getElementById('controls').classList.remove('show');
+  document.getElementById('statsRow').style.display = 'none';
+  document.getElementById('galleryWrap').style.display = 'block';
+}
+
+/* ---------- memory game ---------- */
+let deck = [], flipped = [], lock = false, moves = 0, foundPairs = 0;
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function startGame(){
+  document.getElementById('galleryWrap').style.display = 'none';
+  document.getElementById('board').classList.add('show');
+  document.getElementById('controls').classList.add('show');
+  document.getElementById('statsRow').style.display = 'flex';
+  initGame();
+}
+
+function initGame(){
+  moves = 0; foundPairs = 0; flipped = []; lock = false;
+  document.getElementById('moves').textContent = moves;
+  document.getElementById('found').textContent = foundPairs;
+  document.getElementById('winOverlay').classList.remove('show');
+
+  let cards = [];
+  FLOWERS.forEach((f, idx)=>{
+    cards.push({ id: idx+'-a', pairId: idx, svg:f.svg, word:f.word });
+    cards.push({ id: idx+'-b', pairId: idx, svg:f.svg, word:f.word });
+  });
+  deck = shuffle(cards);
+
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  deck.forEach(cardData=>{
+    const cardEl = document.createElement('div');
+    cardEl.className = 'card';
+    cardEl.dataset.pairId = cardData.pairId;
+    cardEl.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back-face"></div>
+        <div class="card-face card-front-face">
+          ${cardData.svg}
+          <span class="word">${cardData.word}</span>
+        </div>
+      </div>`;
+    cardEl.addEventListener('click', ()=>onCardClick(cardEl, cardData));
+    board.appendChild(cardEl);
+  });
+}
+
+function onCardClick(cardEl, cardData){
+  if(lock) return;
+  if(cardEl.classList.contains('flipped') || cardEl.classList.contains('matched')) return;
+  if(flipped.length === 2) return;
+
+  cardEl.classList.add('flipped');
+  flipped.push({el:cardEl, data:cardData});
+
+  if(flipped.length === 2){
+    moves++;
+    document.getElementById('moves').textContent = moves;
+    lock = true;
+    const [a,b] = flipped;
+    if(a.data.pairId === b.data.pairId){
+      setTimeout(()=>{
+        a.el.classList.add('matched');
+        b.el.classList.add('matched');
+        playMatch();
+        speak(a.data.word);
+        foundPairs++;
+        document.getElementById('found').textContent = foundPairs;
+        flipped = [];
+        lock = false;
+        if(foundPairs === FLOWERS.length){
+          setTimeout(()=>{
+            playWin();
+            document.getElementById('winMoves').textContent = moves;
+            document.getElementById('winOverlay').classList.add('show');
+          }, 400);
+        }
+      }, 350);
+    }else{
+      playMiss();
+      a.el.classList.add('shake');
+      b.el.classList.add('shake');
+      setTimeout(()=>{
+        a.el.classList.remove('flipped','shake');
+        b.el.classList.remove('flipped','shake');
+        flipped = [];
+        lock = false;
+      }, 850);
+    }
+  }
+}
+
+buildGallery();
+</script>
+</body>
+</html>

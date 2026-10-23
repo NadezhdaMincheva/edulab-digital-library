@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Технологично табло: Светофар-другар</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #1e3c72;
+            border-bottom: 3px solid #f2a900;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2a5298;
+            background: #eef2f7;
+            padding: 10px;
+            border-left: 5px solid #2a5298;
+            font-size: 1.2rem;
+        }
+        .standards {
+            background-color: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .standards ul {
+            margin: 5px 0 0 0;
+            padding-left: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        /* Светофар Стилизация */
+        .traffic-light-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px dashed #ccc;
+        }
+        .traffic-light {
+            background: #333;
+            width: 100px;
+            padding: 15px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            box-shadow: 0 8px 0 #222;
+        }
+        .light {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #555;
+            transition: background 0.3s;
+        }
+        .light.red { background: #ff3333; box-shadow: 0 0 15px #ff3333; }
+        .light.yellow { background: #ffcc00; box-shadow: 0 0 15px #ffcc00; }
+        .light.green { background: #33cc33; box-shadow: 0 0 15px #33cc33; }
+        
+        /* Пешеходен светофар */
+        .pedestrian-light {
+            background: #333;
+            width: 90px;
+            padding: 15px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+        .ped-light {
+            width: 45px;
+            height: 45px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .ped-red { background: #ff3333; box-shadow: 0 0 10px #ff3333; }
+        .ped-green { background: #33cc33; box-shadow: 0 0 10px #33cc33; }
+
+        .rules-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .rules-list li {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #fff3cd;
+            border-radius: 5px;
+            border-left: 5px solid #ffc107;
+        }
+        .interactive-btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        .interactive-btn:hover { background: #1e3c72; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Технологично табло: „Светофар-другар“</h1>
+
+    <!-- Направление и Очаквани резултати -->
+    <div class="standards">
+        <strong>Образователно направление:</strong> Околен свят (БДП) <br>
+        <strong>Възрастова група:</strong> Втора група (4-5 години) <br>
+        <strong>Очаквани резултати (ДОС):</strong>
+        <ul>
+            <li>Знае значението на светофара как помощник в движението.</li>
+            <li>Разпознава различни видове светофари (автомобилен и пешеходен).</li>
+            <li>Знае правила за пресичане на улично платно със светофарна уредба.</li>
+        </ul>
+    </div>
+
+    <!-- Модул 1: Значението на светофара -->
+    <h2>Модул 1: Моят верен приятел на пътя</h2>
+    <div class="grid">
+        <div class="traffic-light-box">
+            <p><strong>Защо светофарът ни е другар?</strong></p>
+            <p style="text-align: center; font-style: italic;">"Той казва кога да преминем безопасно и пази децата и колите от злополуки!"</p>
+        </div>
+        <div class="traffic-light-box">
+            <div class="traffic-light">
+                <div class="light red"></div>
+                <div class="light yellow"></div>
+                <div class="light green"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модул 2: Видове светофари -->
+    <h2>Модул 2: Разпознавам видовете светофари</h2>
+    <div class="grid">
+        <div class="traffic-light-box">
+            <h3>1. Автомобилен светофар</h3>
+            <p>Има <strong>три</strong> кръгли светлини (Червено, Жълто, Зелено). Той управлява движението на колите, камионите и автобусите.</p>
+            <div class="traffic-light" style="margin-top:10px;">
+                <div class="light red"></div>
+                <div class="light yellow"></div>
+                <div class="light green"></div>
+            </div>
+        </div>
+        <div class="traffic-light-box">
+            <h3>2. Пешеходен светофар</h3>
+            <p>Има <strong>две</strong> светлини с човечета (Червено - Спри! / Зелено - Върви!). Той е направен специално за нас - пешеходците!</p>
+            <div class="pedestrian-light" style="margin-top:10px;">
+                <div class="ped-light ped-red">🧍 Спри</div>
+                <div class="ped-light ped-green">🚶 Върви</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модул 3: Правила за пресичане -->
+    <h2>Модул 3: Златни правила за пресичане</h2>
+    <div class="grid">
+        <div>
+            <ul class="rules-list">
+                <li>🛑 <strong>Червено човече:</strong> Спираме на тротоара! Не стъпваме на платното.</li>
+                <li>🟢 <strong>Зелено човече:</strong> Поглеждаме наляво, надясно и пак наляво. Пресичаме спокойно, хванати за ръка с възрастен.</li>
+                <li>🚶‍♂️ <strong>Винаги</strong> пресичаме само по пешеходната пътека (тип "Зебра").</li>
+            </ul>
+        </div>
+        <div class="traffic-light-box" style="background: #e3f2fd;">
+            <h3>Ситуационна игра "Пътен полицай"</h3>
+            <p id="game-text">Кликни на бутона, за да провериш правилата!</p>
+            <button class="interactive-btn" onclick="playGame()">Смени светлината!</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let step = 0;
+    function playGame() {
+        const textElement = document.getElementById('game-text');
+        if (step === 0) {
+            textElement.innerHTML = "🔴 <strong>ЧЕРВЕНО!</strong> Светофарът за пешеходци свети червено. Какво правим? <br><br><em>(Децата отговарят: СТОИМ на тротоара!)</em>";
+            step = 1;
+        } else {
+            textElement.innerHTML = "🟢 <strong>ЗЕЛЕНО!</strong> Светна зеленото човече. Какво правим?<br><br><em>(Децата отговарят: Оглеждаме се и пресичаме с мама/татко!)</em>";
+            step = 0;
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Професиите около нас</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fff4d6;--card:#fff;--ink:#3b2a5a;--a:#ff7a59;--b:#4ecdc4;--c:#ffd23f;--ok:#43c463;--bad:#ef5b5b}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a2142;--card:#3d3160;--ink:#fff4d6}}
+:root[data-theme="dark"]{--bg:#2a2142;--card:#3d3160;--ink:#fff4d6}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Comic Sans MS","Trebuchet MS",Arial,sans-serif;text-align:center;min-height:100vh}
+#app{max-width:720px;margin:0 auto;padding:14px}
+h1{font-size:clamp(26px,6vw,40px);margin:8px 0}
+.sub{font-size:18px;margin:0 0 14px}
+.menu button,.opt,.big,.go{font-family:inherit;border:0;cursor:pointer;color:#3b2a5a;border-radius:24px;box-shadow:0 6px 0 rgba(0,0,0,.18);transition:transform .1s}
+.menu button:active,.opt:active,.big:active,.go:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+.menu button{display:block;width:100%;margin:12px 0;padding:18px;font-size:22px;background:var(--c)}
+.menu button:nth-child(2){background:var(--b)}.menu button:nth-child(3){background:var(--a)}
+.menu small{display:block;font-size:15px;font-weight:normal}
+.bar{display:flex;justify-content:space-between;align-items:center;font-size:22px;margin-bottom:8px}
+.go{background:var(--c);padding:8px 16px;font-size:18px}
+.prompt{background:var(--card);border-radius:28px;padding:16px;margin-bottom:14px;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.face{font-size:clamp(70px,22vw,120px);line-height:1.1}
+.riddle{font-size:22px;margin:8px 0}
+.big{background:var(--b);font-size:30px;padding:10px 22px}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.opts.four{grid-template-columns:repeat(4,1fr)}
+.opt{background:var(--card);padding:12px 4px;font-size:clamp(46px,14vw,76px);color:var(--ink)}
+.opt span{display:block;font-size:16px;margin-top:4px}
+.opt.letter,.opt.num{font-size:clamp(44px,13vw,70px);font-weight:bold}
+.opt.bad{background:var(--bad);animation:sh .4s}.opt.good{background:var(--ok)}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.syl{font-size:34px;font-weight:bold;color:var(--a);min-height:44px;margin:6px 0}
+.fin{font-size:60px}.stars{font-size:44px;margin:10px 0}
+.conf{position:fixed;top:-40px;font-size:30px;animation:fall 2.6s linear forwards;pointer-events:none}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const P=[
+{n:'Готвач',e:'👨‍🍳',s:2,t:'sizzle',r:'Правя вкусна супа и баница. Кой съм аз?'},
+{n:'Пожарникар',e:'🧑‍🚒',s:4,t:'fire',r:'Гася пожари с маркуч и вода. Кой съм аз?'},
+{n:'Лекар',e:'🧑‍⚕️',s:2,t:'heart',r:'Лекувам болни деца и слушам сърчицето. Кой съм аз?'},
+{n:'Полицай',e:'👮',s:3,t:'police',r:'Пазя реда и ловя лошите. Кой съм аз?'},
+{n:'Учител',e:'🧑‍🏫',s:3,t:'bell',r:'Уча децата да четат и пишат. Кой съм аз?'},
+{n:'Земеделец',e:'🧑‍🌾',s:4,t:'rooster',r:'Сея жито и гледам животни на полето. Кой съм аз?'},
+{n:'Пилот',e:'🧑‍✈️',s:2,t:'plane',r:'Карам самолет високо в небето. Кой съм аз?'},
+{n:'Художник',e:'🧑‍🎨',s:3,t:'brush',r:'Рисувам картини с четка и бои. Кой съм аз?'},
+{n:'Строител',e:'👷',s:3,t:'hammer',r:'Строя къщи с тухли и чук. Кой съм аз?'},
+{n:'Музикант',e:'🧑‍🎤',s:3,t:'music',r:'Пея и свиря весели песни. Кой съм аз?'},
+{n:'Космонавт',e:'🧑‍🚀',s:3,t:'rocket',r:'Летя с ракета при звездите. Кой съм аз?'},
+{n:'Монтьор',e:'🧑‍🔧',s:2,t:'drill',r:'Оправям счупени коли с ключове. Кой съм аз?'}
+];
+const SY={Готвач:'Гот-вач',Пожарникар:'По-жар-ни-кар',Лекар:'Ле-кар',Полицай:'По-ли-цай',Учител:'У-чи-тел',Земеделец:'Зе-ме-де-лец',Пилот:'Пи-лот',Художник:'Ху-дож-ник',Строител:'Стро-и-тел',Музикант:'Му-зи-кант',Космонавт:'Кос-мо-навт',Монтьор:'Мон-тьор'};
+let ac;const A=()=>ac||(ac=new(window.AudioContext||window.webkitAudioContext)());
+function tone(f,t,d,ty='sine',v=.2,f2){const a=A(),o=a.createOscillator(),g=a.createGain(),s=a.currentTime+t;o.type=ty;o.frequency.setValueAtTime(f,s);if(f2)o.frequency.linearRampToValueAtTime(f2,s+d);g.gain.setValueAtTime(v,s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.connect(g);g.connect(a.destination);o.start(s);o.stop(s+d+.05)}
+function noise(t,d,f,v=.25){const a=A(),n=a.sampleRate*d,b=a.createBuffer(1,n,a.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=a.createBufferSource(),fl=a.createBiquadFilter(),g=a.createGain();s.buffer=b;fl.type='bandpass';fl.frequency.value=f;g.gain.setValueAtTime(v,a.currentTime+t);g.gain.linearRampToValueAtTime(0,a.currentTime+t+d);s.connect(fl);fl.connect(g);g.connect(a.destination);s.start(a.currentTime+t)}
+const SND={
+sizzle:()=>noise(0,1.4,5000,.3),
+fire:()=>{for(let i=0;i<3;i++)tone(600,i*.8,.8,'sawtooth',.12,1100)},
+police:()=>{for(let i=0;i<4;i++)tone(i%2?700:950,i*.35,.33,'square',.1)},
+heart:()=>{for(let i=0;i<3;i++){tone(70,i*.7,.18,'sine',.5);tone(60,i*.7+.25,.18,'sine',.4)}},
+bell:()=>{for(let i=0;i<3;i++){tone(1300,i*.25,.6,'sine',.2);tone(1950,i*.25,.4,'sine',.1)}},
+rooster:()=>{tone(500,0,.25,'sawtooth',.12,900);tone(900,.3,.2,'sawtooth',.12,700);tone(700,.55,.5,'sawtooth',.12,1000)},
+plane:()=>{noise(0,1.8,400,.5);tone(110,0,1.8,'sawtooth',.08,180)},
+brush:()=>{noise(0,.5,2500,.15);noise(.6,.5,3000,.15)},
+hammer:()=>{for(let i=0;i<4;i++){tone(220,i*.3,.1,'square',.25);noise(i*.3,.08,1500,.3)}},
+music:()=>{[523,659,784,659,523,784,1046].forEach((f,i)=>tone(f,i*.22,.3,'triangle',.25))},
+rocket:()=>{[0,.5,1].forEach(t=>tone(880,t,.2,'square',.12));tone(1100,1.5,.4,'square',.15);noise(1.6,2,300,.6)},
+drill:()=>{for(let i=0;i<8;i++)tone(150,i*.12,.1,'sawtooth',.15,260)}
+};
+const ok=()=>[523,659,784,1046].forEach((f,i)=>tone(f,i*.1,.25,'triangle',.25));
+const bad=()=>tone(220,0,.35,'sawtooth',.15,140);
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='bg-BG';u.rate=.8;speechSynthesis.speak(u)}catch(e){}}
+const sh=a=>[...a].sort(()=>Math.random()-.5);
+const app=document.getElementById('app');
+let G;
+function menu(){
+ app.innerHTML=`<h1>🌟 Професиите около нас 🌟</h1><p class="sub">Избери игра!</p>
+ <div class="menu">
+ <button data-m="1">👂 Чуй и познай<small>Слушам звука и гатанката</small></button>
+ <button data-m="2">🔤 С коя буква започва?<small>Първа буква на думата</small></button>
+ <button data-m="3">👏 Колко срички?<small>Пляскам и броя</small></button></div>
+ <p class="sub">🔊 Включи звука!</p>`;
+ app.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{A().resume();start(+b.dataset.m)});
+}
+function start(m){G={m,q:0,stars:0,list:sh(P).slice(0,6),first:true};ask()}
+function ask(){
+ if(G.q>=G.list.length)return end();
+ const p=G.list[G.q];G.first=true;
+ const bar=`<div class="bar"><button class="go" id="home">🏠</button><span>${'⭐'.repeat(G.stars)||'☆'}</span><span>${G.q+1}/${G.list.length}</span></div>`;
+ let top,opts,cls='opts',say_=()=>{};
+ const others=sh(P.filter(x=>x!==p));
+ if(G.m==1){
+  top=`<div class="prompt"><button class="big" id="rep">🔊 Чуй</button><div class="riddle">${p.r}</div></div>`;
+  opts=sh([p,others[0],others[1]]).map(x=>({h:`${x.e}<span>${x.n}</span>`,ok:x===p,c:''}));
+  say_=()=>{SND[p.t]();setTimeout(()=>say(p.r),2300)};
+ }else if(G.m==2){
+  const L=p.n[0],ls=[...new Set(others.map(x=>x.n[0]).filter(l=>l!==L))].slice(0,2);
+  top=`<div class="prompt"><div class="face">${p.e}</div><div class="riddle">С коя буква започва думата <b>${p.n}</b>?</div><button class="big" id="rep">🔊 Чуй</button></div>`;
+  opts=sh([L,...ls]).map(l=>({h:l,ok:l===L,c:'letter'}));
+  say_=()=>say(p.n);
+ }else{
+  top=`<div class="prompt"><div class="face">${p.e}</div><div class="riddle">Колко срички има думата <b>${p.n}</b>?</div><div class="syl" id="syl"></div><button class="big" id="rep">🔊 Чуй</button></div>`;
+  opts=[1,2,3,4].map(n=>({h:n,ok:n===p.s,c:'num'}));cls='opts four';
+  say_=()=>say(p.n);
+ }
+ app.innerHTML=bar+top+`<div class="${cls}">${opts.map((o,i)=>`<button class="opt ${o.c}" data-i="${i}">${o.h}</button>`).join('')}</div>`;
+ document.getElementById('home').onclick=menu;
+ document.getElementById('rep').onclick=say_;
+ setTimeout(say_,300);
+ app.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+  if(b.classList.contains('good'))return;
+  if(opts[b.dataset.i].ok){
+   b.classList.add('good');ok();confetti();
+   if(G.first)G.stars++;
+   if(G.m==3){const s=SY[p.n].split('-');document.getElementById('syl').textContent=SY[p.n];s.forEach((_,i)=>tone(300,i*.4,.15,'square',.25));setTimeout(()=>say('Браво! '+p.n),s.length*400);}
+   else setTimeout(()=>say('Браво! '+p.n),500);
+   G.q++;setTimeout(ask,G.m==3?3600:2400);
+   app.querySelectorAll('.opt').forEach(x=>x.style.pointerEvents='none');
+  }else{G.first=false;b.classList.add('bad');bad();say('Опитай пак!');setTimeout(()=>b.classList.remove('bad'),500)}
+ });
+}
+function end(){
+ const n=G.stars;
+ app.innerHTML=`<div class="fin">🏆</div><h1>Браво, шампион!</h1><div class="stars">${'⭐'.repeat(n)}${'☆'.repeat(G.list.length-n)}</div>
+ <div class="menu"><button id="again">🔁 Пак същата игра</button><button id="mn">🏠 Към менюто</button></div>`;
+ ok();setTimeout(ok,500);for(let i=0;i<3;i++)setTimeout(confetti,i*400);say('Браво! Ти си страхотен!');
+ document.getElementById('again').onclick=()=>start(G.m);document.getElementById('mn').onclick=menu;
+}
+function confetti(){for(let i=0;i<14;i++){const c=document.createElement('div');c.className='conf';c.textContent=['🎉','⭐','🎈','✨','🌟'][i%5];c.style.left=Math.random()*95+'%';c.style.animationDelay=Math.random()*.6+'s';document.body.appendChild(c);setTimeout(()=>c.remove(),3500)}}
+menu();
+</script>
+</body>
+</html>

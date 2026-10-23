@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Звучко: Детективи на звуци</title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background: #f0f9ff; text-align: center; margin: 0; padding: 20px; }
+        #game-container { max-width: 850px; margin: auto; background: white; border-radius: 30px; padding: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.15); border: 5px solid #ffcc00; }
+        h1 { color: #0288d1; font-size: 2.2rem; margin-bottom: 10px; }
+        #image-display { font-size: 120px; margin: 20px; }
+        
+        /* Звукови квадратчета */
+        #sound-boxes { display: flex; justify-content: center; gap: 10px; margin: 20px 0 40px 0; }
+        .box { 
+            width: 60px; height: 60px; border: 3px solid #0288d1; 
+            border-radius: 10px; display: flex; align-items: center; 
+            justify-content: center; font-size: 2.5rem; font-weight: bold; color: #d32f2f;
+            background: #fff;
+        }
+
+        #options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .cloud-btn { 
+            background: #ffffff; border: 4px solid #4fc3f7; border-radius: 20px; 
+            padding: 25px; font-size: 3.5rem; cursor: pointer; transition: 0.2s;
+            color: #0277bd; font-weight: bold; box-shadow: 0 6px 0 #0277bd;
+        }
+        .cloud-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #0277bd; }
+        .correct { background: #c8e6c9 !important; border-color: #4caf50 !important; }
+        .wrong { background: #ffcdd2 !important; border-color: #f44336 !important; animation: shake 0.4s; }
+        
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>Звучко: Как започва думата?</h1>
+    <div id="image-display">🐱</div>
+    
+    <div id="sound-boxes"></div>
+    
+    <div id="options">
+        <button class="cloud-btn" onclick="checkAnswer('М')">М</button>
+        <button class="cloud-btn" onclick="checkAnswer('К')">К</button>
+        <button class="cloud-btn" onclick="checkAnswer('Л')">Л</button>
+        <button class="cloud-btn" onclick="checkAnswer('Н')">Н</button>
+        <button class="cloud-btn" onclick="checkAnswer('С')">С</button>
+        <button class="cloud-btn" onclick="checkAnswer('З')">З</button>
+    </div>
+</div>
+
+<script>
+    const levels = [
+        { char: "М", icon: "👩", length: 4 }, // Мама
+        { char: "К", icon: "🐱", length: 5 }, // Котка
+        { char: "Л", icon: "🦁", length: 3 }, // Лъв
+        { char: "Н", icon: "👃", length: 3 }, // Нос
+        { char: "С", icon: "☀️", length: 6 }, // Слънце
+        { char: "З", icon: "🐍", length: 4 }, // Змия
+        { char: "М", icon: "🥕", length: 6 }, // Морков
+        { char: "К", icon: "📖", length: 5 }, // Книга
+        { char: "З", icon: "⭐", length: 6 }  // Звезда
+    ];
+
+    let currentLevel = 0;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSuccessSound() {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // До
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.5); // Ла
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function initLevel() {
+        const level = levels[currentLevel];
+        document.getElementById('image-display').innerHTML = level.icon;
+        
+        const boxContainer = document.getElementById('sound-boxes');
+        boxContainer.innerHTML = "";
+        for(let i = 0; i < level.length; i++) {
+            const box = document.createElement('div');
+            box.className = 'box';
+            box.id = 'box-' + i;
+            boxContainer.appendChild(box);
+        }
+        
+        const buttons = document.querySelectorAll('.cloud-btn');
+        buttons.forEach(btn => btn.className = 'cloud-btn');
+    }
+
+    function checkAnswer(selectedChar) {
+        const level = levels[currentLevel];
+        const buttons = document.querySelectorAll('.cloud-btn');
+        let btn;
+        buttons.forEach(b => { if(b.innerText === selectedChar) btn = b; });
+
+        if (selectedChar === level.char) {
+            btn.classList.add('correct');
+            document.getElementById('box-0').innerText = level.char;
+            playSuccessSound();
+            
+            setTimeout(() => {
+                currentLevel++;
+                if (currentLevel >= levels.length) {
+                    alert("Браво! Ти си истински откривател на звуци!");
+                    currentLevel = 0;
+                }
+                initLevel();
+            }, 1500);
+        } else {
+            btn.classList.add('wrong');
+            setTimeout(() => btn.classList.remove('wrong'), 500);
+        }
+    }
+
+    initLevel();
+</script>
+
+</body>
+</html>

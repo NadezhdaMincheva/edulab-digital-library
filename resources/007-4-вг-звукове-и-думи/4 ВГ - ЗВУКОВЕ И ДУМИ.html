@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ловци на звукове — игра по ОН БЕЛ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FFF8E7;
+    --ink:#3D2645;
+    --coral:#FF6F59;
+    --sun:#FFC93C;
+    --sky:#4FB0C6;
+    --leaf:#6BBF59;
+    --static-bg:#E9F6F8;
+    --dynamic-bg:#FFF1DC;
+    --card-shadow: 0 10px 0 rgba(61,38,69,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    background:var(--cream);
+    background-image:
+      radial-gradient(circle at 8% 15%, rgba(255,201,60,0.35) 0, transparent 40%),
+      radial-gradient(circle at 92% 85%, rgba(79,176,198,0.30) 0, transparent 45%);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    transition:background-color .5s ease;
+    overflow-x:hidden;
+  }
+  body.mode-static{background-color:var(--static-bg);}
+  body.mode-dynamic{background-color:var(--dynamic-bg);}
+
+  h1,h2,h3,.display{font-family:'Baloo 2',cursive;}
+
+  /* ---------- Top bar ---------- */
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 24px;
+    gap:16px;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:1.15rem;
+    color:var(--ink);
+  }
+  .brand .fox{font-size:1.6rem;}
+  .progress-dots{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .dot{
+    width:12px;height:12px;border-radius:50%;
+    background:rgba(61,38,69,0.18);
+    transition:all .25s ease;
+  }
+  .dot.active{background:var(--coral); transform:scale(1.35);}
+  .dot.done{background:var(--leaf);}
+  .mode-badge{
+    font-family:'Baloo 2',cursive;
+    font-weight:600;
+    font-size:.85rem;
+    padding:6px 14px;
+    border-radius:999px;
+    background:white;
+    box-shadow:var(--card-shadow);
+    white-space:nowrap;
+  }
+
+  /* ---------- Stage ---------- */
+  main{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 20px 30px;
+  }
+  .stage{
+    width:100%;
+    max-width:920px;
+    background:white;
+    border-radius:28px;
+    box-shadow:0 16px 0 rgba(61,38,69,0.10), 0 20px 40px rgba(61,38,69,0.10);
+    padding:36px 40px 32px;
+    position:relative;
+    animation:pop .35s ease;
+  }
+  @keyframes pop{
+    from{opacity:0; transform:translateY(14px) scale(.98);}
+    to{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .round-label{
+    display:inline-block;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    color:white;
+    background:var(--coral);
+    padding:5px 16px;
+    border-radius:999px;
+    font-size:.9rem;
+    margin-bottom:10px;
+  }
+  .stage h2{
+    margin:6px 0 4px;
+    font-size:1.9rem;
+    color:var(--ink);
+  }
+  .stage .subtitle{
+    margin:0 0 18px;
+    font-size:1.05rem;
+    color:#6b5876;
+    font-weight:600;
+  }
+
+  .mascot-line{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    background:var(--sun);
+    background:linear-gradient(135deg,#FFE7A8,#FFC93C22);
+    border:2px dashed #E6A800;
+    border-radius:18px;
+    padding:14px 18px;
+    margin-bottom:22px;
+    font-weight:700;
+    font-size:1.05rem;
+  }
+  .mascot-line .fox{font-size:1.8rem; line-height:1;}
+
+  /* card grid for pictures */
+  .cards{
+    display:flex;
+    flex-wrap:wrap;
+    gap:18px;
+    justify-content:center;
+    margin-bottom:18px;
+  }
+  .pic-card{
+    background:var(--cream);
+    border:3px solid transparent;
+    border-radius:20px;
+    padding:18px 22px;
+    text-align:center;
+    width:150px;
+    cursor:pointer;
+    transition:all .2s ease;
+    user-select:none;
+  }
+  .pic-card:hover{transform:translateY(-4px); box-shadow:var(--card-shadow);}
+  .pic-card .emoji{font-size:3rem; display:block; margin-bottom:8px;}
+  .pic-card .word{font-family:'Baloo 2',cursive; font-weight:700; font-size:1.15rem;}
+  .pic-card.correct{border-color:var(--leaf); background:#EAF9E9;}
+  .pic-card.wrong{border-color:var(--coral); background:#FFEFEC;}
+  .pic-card .first-sound{
+    display:none;
+    margin-top:6px;
+    font-size:.95rem;
+    font-weight:700;
+    color:var(--coral);
+  }
+  .pic-card.revealed .first-sound{display:block;}
+
+  .listen-btn{
+    border:none;
+    background:var(--sky);
+    color:white;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:.8rem;
+    padding:4px 10px;
+    border-radius:999px;
+    margin-top:8px;
+    cursor:pointer;
+  }
+  .listen-btn:hover{filter:brightness(1.08);}
+
+  .letter-target{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    margin:6px 0 24px;
+  }
+  .letter-circle{
+    width:88px;height:88px;
+    border-radius:50%;
+    background:var(--coral);
+    color:white;
+    font-family:'Baloo 2',cursive;
+    font-size:2.6rem;
+    font-weight:800;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 0 #d8543f;
+  }
+
+  .tip-box{
+    background:#F3EEF6;
+    border-left:5px solid var(--sky);
+    border-radius:12px;
+    padding:12px 16px;
+    font-size:.95rem;
+    color:#4a3a55;
+    margin-top:14px;
+  }
+  .tip-box strong{color:var(--ink);}
+
+  .dynamic-visual{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:26px;
+    margin:18px 0 22px;
+    flex-wrap:wrap;
+  }
+  .big-emoji{
+    font-size:5rem;
+    animation:bounce 1.6s infinite ease-in-out;
+  }
+  @keyframes bounce{
+    0%,100%{transform:translateY(0) rotate(-3deg);}
+    50%{transform:translateY(-14px) rotate(3deg);}
+  }
+  .word-stream{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .word-chip{
+    background:white;
+    border:2px solid var(--sun);
+    border-radius:999px;
+    padding:10px 20px;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:1.1rem;
+    cursor:pointer;
+    transition:all .2s;
+  }
+  .word-chip:hover{background:var(--sun); transform:scale(1.06);}
+  .word-chip.yes{background:var(--leaf); border-color:#4a9d3c; color:white;}
+  .word-chip.no{background:#eee; color:#999; border-color:#ddd;}
+
+  .sentence-build{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .question-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .question-chip{
+    background:var(--sky);
+    color:white;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    padding:8px 16px;
+    border-radius:12px;
+    font-size:.95rem;
+  }
+  .sentence-line{
+    font-family:'Baloo 2',cursive;
+    font-size:1.4rem;
+    text-align:center;
+    background:var(--cream);
+    border-radius:16px;
+    padding:16px 24px;
+    min-height:1.6em;
+  }
+  .reveal-btn{
+    border:none;
+    background:var(--coral);
+    color:white;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    padding:10px 22px;
+    border-radius:999px;
+    font-size:1rem;
+    cursor:pointer;
+    box-shadow:0 6px 0 #d8543f;
+  }
+  .reveal-btn:active{transform:translateY(3px); box-shadow:none;}
+
+  .chain-wrap{
+    display:flex;
+    justify-content:center;
+    margin:10px 0 20px;
+  }
+  .chain-diagram{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:6px;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:1.25rem;
+  }
+  .chain-word{
+    background:white;
+    border:3px solid var(--leaf);
+    border-radius:16px;
+    padding:10px 16px;
+  }
+  .chain-arrow{color:var(--coral); font-size:1.4rem;}
+
+  .final-star{
+    text-align:center;
+  }
+  .final-star .big-emoji{animation:spin 3s linear infinite;}
+  @keyframes spin{ from{transform:rotate(0);} to{transform:rotate(360deg);} }
+
+  .skills-list{
+    list-style:none;
+    padding:0;
+    margin:18px 0 0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  .skills-list li{
+    background:var(--cream);
+    border-radius:12px;
+    padding:10px 14px;
+    font-weight:700;
+    font-size:.95rem;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+
+  /* ---------- Nav ---------- */
+  .nav-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:26px;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .nav-btn{
+    border:none;
+    font-family:'Baloo 2',cursive;
+    font-weight:700;
+    font-size:1.05rem;
+    padding:12px 26px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .nav-btn.primary{
+    background:var(--coral);
+    color:white;
+    box-shadow:0 6px 0 #d8543f;
+  }
+  .nav-btn.primary:hover{filter:brightness(1.05);}
+  .nav-btn.primary:active{transform:translateY(4px); box-shadow:none;}
+  .nav-btn.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:2px solid #d9cfe0;
+  }
+  .nav-btn.secondary:hover{background:#f2edf5;}
+  .nav-btn:disabled{opacity:.35; cursor:not-allowed;}
+  .nav-btn.restart{
+    background:var(--sky);
+    color:white;
+    box-shadow:0 6px 0 #357f92;
+  }
+
+  footer{
+    text-align:center;
+    padding:10px;
+    font-size:.8rem;
+    color:#9a8ba3;
+  }
+
+  @media (max-width:640px){
+    .stage{padding:24px 20px 26px;}
+    .stage h2{font-size:1.5rem;}
+    .skills-list{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body class="mode-static">
+
+<header class="topbar">
+  <div class="brand"><span class="fox">🦊</span> Ловци на звукове</div>
+  <div class="progress-dots" id="dots"></div>
+  <div class="mode-badge" id="modeBadge">🧠 Спокойно състояние</div>
+</header>
+
+<main>
+  <div class="stage" id="stage"></div>
+</main>
+
+<footer>Игра по ОН БЕЛ · тема „Звукове и думи“ · за 4-та възрастова група</footer>
+
+<script>
+/* ---------------- Helper: speak a word in Bulgarian if supported ---------------- */
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  try{
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'bg-BG';
+    u.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------------- Stage data ---------------- */
+const stages = [
+
+// 0. INTRO
+{
+  type:'intro',
+  mode:'static',
+  render:()=>`
+    <div style="text-align:center;">
+      <div class="big-emoji" style="animation:bounce 2s infinite;">🦊🔍</div>
+      <h2 style="font-size:2.3rem; margin-top:6px;">Ловци на звукове</h2>
+      <p class="subtitle">Игра по ОН БЕЛ — тема „Звукове и думи“</p>
+      <div class="mascot-line"><span class="fox">🦊</span>
+        <span>Здравейте, приятели! Аз съм Лиско Ловеца и днес ще търсим заедно звукове, скрити в думите. Готови ли сте за приключение?</span>
+      </div>
+      <div class="tip-box">
+        <strong>За учителя:</strong> Играта има 4 кръга. Всеки кръг редува спокоен (седящ) етап и подвижен (динамичен) етап — следвайте инструкциите на екрана и ги изговаряйте на глас на децата. Целите: конструиране на сложни изречения по опора, правилно произнасяне и отделяне на звукове, определяне на началния звук в думата.
+      </div>
+    </div>`
+},
+
+// 1. КРЪГ 1 - STATIC
+{
+  type:'static', round:1,
+  title:'Кръг 1 · Загрявка',
+  subtitle:'Слушаме и откриваме първия звук',
+  mascotLine:'Погледнете картинките. Кажете думата бавно и високо и чуйте кой звук се крие в самото начало!',
+  render:()=>`
+    <div class="cards" id="cardRow1">
+      ${card('🐻','мечка','М')}
+      ${card('🐭','мишка','М')}
+      ${card('🦊','лисица','Л')}
+    </div>
+    <div class="tip-box"><strong>Как да играем:</strong> Децата казват думата на глас, разтеглено (ммм-ечка), после натиснете картинката заедно с дете доброволец, за да се покаже началният звук.</div>
+  `,
+  after:()=>attachCardHandlers('cardRow1')
+},
+
+// 2. КРЪГ 1 - DYNAMIC
+{
+  type:'dynamic', round:1,
+  title:'Кръг 1 · Стани при звук М!',
+  subtitle:'От седене — в movение!',
+  mascotLine:'Сега ставаме прави! Ще казвам думи. Скачате, само ако думата започва със звук М!',
+  render:()=>`
+    <div class="dynamic-visual">
+      <div class="big-emoji">🏃‍♂️</div>
+      <div class="letter-circle">М</div>
+    </div>
+    <div class="word-stream" id="wordStream1">
+      ${chip('маса',true)}${chip('стол',false)}${chip('мама',true)}${chip('книга',false)}${chip('молив',true)}${chip('топка',false)}
+    </div>
+    <div class="tip-box"><strong>Инструкция:</strong> Прочетете думите една по една на глас. При дума със звук „М“ — децата скачат и пляскат. При другите думи — клякат тихо. Натиснете дума, за да видите дали е вярно (зелено = да, скачаме).</div>
+  `,
+  after:()=>attachChipHandlers('wordStream1')
+},
+
+// 3. КРЪГ 2 - STATIC
+{
+  type:'static', round:2,
+  title:'Кръг 2 · Търсим звук С',
+  subtitle:'Определяне на началния звук',
+  mascotLine:'Нов звук ни очаква — звук С! Кои от тези думи започват точно с него?',
+  render:()=>`
+    <div class="letter-target"><div class="letter-circle" style="background:var(--sky); box-shadow:0 8px 0 #357f92;">С</div></div>
+    <div class="cards" id="cardRow2">
+      ${card('🦉','сова','С')}
+      ${card('🐘','слон','С')}
+      ${card('🐱','коте','К')}
+    </div>
+    <div class="tip-box"><strong>Как да играем:</strong> Насърчете децата сами да произнесат думата разтеглено, преди да натиснете картинката за проверка.</div>
+  `,
+  after:()=>attachCardHandlers('cardRow2')
+},
+
+// 4. КРЪГ 2 - DYNAMIC
+{
+  type:'dynamic', round:2,
+  title:'Кръг 2 · Изобрази животното',
+  subtitle:'Движение и звукоподражание',
+  mascotLine:'Чуете ли дума със звук С — станете и изобразете животното: как се движи и какъв звук издава!',
+  render:()=>`
+    <div class="dynamic-visual">
+      <div class="big-emoji">🦌</div>
+      <div class="big-emoji" style="animation-delay:.4s;">🐷</div>
+    </div>
+    <div class="word-stream" id="wordStream2">
+      ${chip('сърна',true)}${chip('свиня',true)}${chip('коза',false)}${chip('сова',true)}${chip('патка',false)}
+    </div>
+    <div class="tip-box"><strong>Инструкция:</strong> При дума със звук „С“ децата скачат като сърна, грухтят като свинче или размахват ръце като сова. При другите думи стоят неподвижни.</div>
+  `,
+  after:()=>attachChipHandlers('wordStream2')
+},
+
+// 5. КРЪГ 3 - STATIC (sentence building)
+{
+  type:'static', round:3,
+  title:'Кръг 3 · Строим изречение',
+  subtitle:'Конструиране по нагледна и словесна опора',
+  mascotLine:'Вижте картинките и въпросните думи. Заедно да съставим дълго, хубаво изречение!',
+  render:()=>`
+    <div class="sentence-build">
+      <div class="cards">
+        ${pictureOnly('🐻','Мечо')}
+        ${pictureOnly('⚽','топката')}
+        ${pictureOnly('🌲','гората')}
+      </div>
+      <div class="question-row">
+        <span class="question-chip">Кой?</span>
+        <span class="question-chip">Какво прави?</span>
+        <span class="question-chip">Къде?</span>
+      </div>
+      <div class="sentence-line" id="sentenceReveal">? ? ?</div>
+      <button class="reveal-btn" onclick="revealSentence()">Разкрий изречението</button>
+    </div>
+    <div class="tip-box"><strong>За учителя:</strong> Първо оставете децата сами да предложат изречение по картинките и опорните въпроси. После натиснете бутона за примерен вариант и сравнете. Насърчете разширяване: „А какво още може да прави Мечо?“</div>
+  `,
+},
+
+// 6. КРЪГ 3 - DYNAMIC
+{
+  type:'dynamic', round:3,
+  title:'Кръг 3 · Изиграй изречението',
+  subtitle:'От дума към движение',
+  mascotLine:'Стани и покажи какво прави Мечо — рита топката в гората! Хайде всички заедно!',
+  render:()=>`
+    <div class="dynamic-visual">
+      <div class="big-emoji">🐻</div>
+      <div class="big-emoji" style="animation-delay:.3s;">⚽</div>
+      <div class="big-emoji" style="animation-delay:.6s;">🌲</div>
+    </div>
+    <div class="sentence-line">„Мечо рита топката в гората.“</div>
+    <div class="tip-box"><strong>Инструкция:</strong> Децата имитират движението — замахват с крак като за ритане, после „тичат между дърветата“. Повторете 2-3 пъти с нарастваща скорост, после — бавно на забавен каданс.</div>
+  `,
+},
+
+// 7. КРЪГ 4 - FINAL (chain game)
+{
+  type:'static', round:4,
+  title:'Кръг 4 · Верига от звукове',
+  subtitle:'Финална обобщаваща игра',
+  mascotLine:'Последно предизвикателство! Всяка следваща дума започва със звука, на който свърши предишната.',
+  render:()=>`
+    <div class="chain-wrap">
+      <div class="chain-diagram">
+        <span class="chain-word">кола</span><span class="chain-arrow">➜</span>
+        <span class="chain-word">ааист</span><span class="chain-arrow">➜</span>
+        <span class="chain-word">тиква</span><span class="chain-arrow">➜</span>
+        <span class="chain-word">аба</span>
+      </div>
+    </div>
+    <div class="tip-box"><strong>Как се играе:</strong> Децата седят в кръг. Учителят казва първа дума (напр. „кола“). Следващото дете трябва да измисли дума, започваща със звука, с който завършва предишната. При всяка успешна дума — децата стават и правят едно завъртане, после сядат за следващия ред. Така редуваме спокойно мислене с кратко движение.</div>
+    <div class="tip-box"><strong>Насока:</strong> При затруднение помогнете с 2 картинки за избор. Похвалете всеки опит — целта е упражняване на звуков анализ, а не темпо.</div>
+  `,
+},
+
+// 8. FINAL / SUMMARY
+{
+  type:'final',
+  mode:'static',
+  render:()=>`
+    <div class="final-star">
+      <div class="big-emoji">🌟</div>
+      <h2>Браво, ловци на звукове!</h2>
+      <p class="subtitle">Днес упражнихме:</p>
+      <ul class="skills-list">
+        <li>🔤 Определяне на началния звук в думата</li>
+        <li>🗣️ Правилно произнасяне и отделяне на звукове</li>
+        <li>🧩 Конструиране на сложни изречения по опора</li>
+        <li>🏃 Редуване на спокойно и подвижно състояние</li>
+      </ul>
+      <div class="mascot-line" style="margin-top:20px;"><span class="fox">🦊</span>
+        <span>Лиско е много горд с вас! До следващото приключение със звуковете!</span>
+      </div>
+    </div>
+  `
+}
+];
+
+/* ---------------- small render helpers ---------------- */
+function card(emoji, word, sound){
+  return `<div class="pic-card" data-sound="${sound}" onclick="revealCard(this)">
+      <span class="emoji">${emoji}</span>
+      <span class="word">${word}</span>
+      <button class="listen-btn" onclick="event.stopPropagation(); speak('${word}')">🔊 Чуй</button>
+      <div class="first-sound">Начален звук: ${sound}</div>
+    </div>`;
+}
+function pictureOnly(emoji, word){
+  return `<div class="pic-card" style="cursor:default;">
+      <span class="emoji">${emoji}</span>
+      <span class="word">${word}</span>
+    </div>`;
+}
+function chip(word, isMatch){
+  return `<span class="word-chip" data-match="${isMatch}" onclick="checkChip(this)">${word}</span>`;
+}
+window.revealCard = function(el){
+  el.classList.add('revealed');
+};
+window.checkChip = function(el){
+  const match = el.getAttribute('data-match') === 'true';
+  el.classList.add(match ? 'yes' : 'no');
+};
+function attachCardHandlers(id){ /* handled via inline onclick already */ }
+function attachChipHandlers(id){ /* handled via inline onclick already */ }
+window.revealSentence = function(){
+  document.getElementById('sentenceReveal').textContent = '„Мечо рита топката в гората.“';
+};
+
+/* ---------------- Engine ---------------- */
+let current = 0;
+
+function renderDots(){
+  const dotsEl = document.getElementById('dots');
+  dotsEl.innerHTML = stages.map((s,i)=>{
+    let cls = 'dot';
+    if(i === current) cls += ' active';
+    else if(i < current) cls += ' done';
+    return `<span class="${cls}"></span>`;
+  }).join('');
+}
+
+function renderStage(){
+  const s = stages[current];
+  const stageEl = document.getElementById('stage');
+  const mode = s.type === 'dynamic' ? 'dynamic' : 'static';
+
+  document.body.classList.remove('mode-static','mode-dynamic');
+  document.body.classList.add(mode === 'dynamic' ? 'mode-dynamic' : 'mode-static');
+  document.getElementById('modeBadge').textContent = mode === 'dynamic' ? '🏃 Движение' : '🧠 Спокойно състояние';
+
+  let inner = '';
+  if(s.round){
+    inner += `<span class="round-label">${s.title}</span><h2>${s.subtitle || ''}</h2>`;
+  }
+  if(s.mascotLine){
+    inner += `<div class="mascot-line"><span class="fox">🦊</span><span>${s.mascotLine}</span></div>`;
+  }
+  inner += s.render();
+
+  inner += `<div class="nav-row">
+      <button class="nav-btn secondary" onclick="prevStage()" ${current===0?'disabled':''}>⬅ Назад</button>
+      <button class="nav-btn restart" onclick="restart()">↺ Начало</button>
+      <button class="nav-btn primary" onclick="nextStage()" ${current===stages.length-1?'disabled':''}>Напред ➡</button>
+    </div>`;
+
+  stageEl.innerHTML = inner;
+  if(s.after) s.after();
+  renderDots();
+}
+
+function nextStage(){ if(current < stages.length-1){ current++; renderStage(); } }
+function prevStage(){ if(current > 0){ current--; renderStage(); } }
+function restart(){ current = 0; renderStage(); }
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'ArrowRight') nextStage();
+  if(e.key === 'ArrowLeft') prevStage();
+});
+
+renderStage();
+</script>
+</body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Плодове и зеленчуци — игра със звук</title>
+<style>
+  :root{
+    --sky:#8ecae6;
+    --sun:#ffd60a;
+    --grass:#a7c957;
+    --fruit-basket:#ff7b54;
+    --veg-basket:#588157;
+    --card:#ffffff;
+    --ink:#3d3d3d;
+    --pop:#ff595e;
+    --pop2:#1a936f;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent; user-select:none;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Baloo 2','Comic Sans MS','Trebuchet MS',sans-serif;
+    background: linear-gradient(180deg, var(--sky) 0%, var(--sky) 50%, var(--grass) 50%, var(--grass) 100%);
+    overflow:hidden;
+    touch-action:none;
+  }
+  #sun{
+    position:absolute; top:20px; right:26px; width:70px; height:70px;
+    background:var(--sun); border-radius:50%;
+    box-shadow:0 0 0 10px rgba(255,214,10,0.35);
+    animation:spin 12s linear infinite;
+    z-index:1;
+  }
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  .cloud{
+    position:absolute; background:white; border-radius:50px; opacity:0.9; z-index:1;
+  }
+  #soundToggle{
+    position:absolute; top:16px; left:16px; z-index:20;
+    width:52px; height:52px; border-radius:50%;
+    background:#fff; border:none; font-size:26px;
+    box-shadow:0 4px 0 rgba(0,0,0,0.15);
+    cursor:pointer;
+  }
+  #soundToggle:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,0.15);}
+  #game{
+    position:relative; width:100%; height:100%;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  header{
+    text-align:center; padding:10px 10px 2px;
+    z-index:5;
+  }
+  h1{
+    margin:0; font-size:clamp(20px, 4vw, 34px); color:#2b2b2b;
+    text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff;
+    letter-spacing:1px;
+  }
+  #stars{
+    font-size:clamp(16px,2.6vw,22px);
+    margin-top:2px;
+    color:#e07a00;
+    font-weight:bold;
+  }
+  #stage{
+    position:relative;
+    flex:1;
+    width:100%;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+  }
+  #item-wrap{
+    position:absolute;
+    top:4%;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    z-index:10;
+  }
+  #item{
+    width:clamp(170px,26vw,280px);
+    height:clamp(170px,26vw,280px);
+    background:var(--card);
+    border-radius:40px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:clamp(100px,15vw,190px);
+    box-shadow:0 12px 0 rgba(0,0,0,0.12), 0 16px 24px rgba(0,0,0,0.15);
+    cursor:grab;
+    touch-action:none;
+    animation:bob 2.2s ease-in-out infinite;
+    border:7px solid #fff;
+  }
+  #item.dragging{ cursor:grabbing; animation:none; transition:none; z-index:50; }
+  #item.correct{ animation:pop 0.5s ease; }
+  #item.wrong{ animation:shake 0.5s ease; }
+  @keyframes bob{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(-12px);}
+  }
+  @keyframes pop{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.35) rotate(10deg);}
+    100%{transform:scale(0); opacity:0;}
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-14px) rotate(-6deg);}
+    40%{transform:translateX(14px) rotate(6deg);}
+    60%{transform:translateX(-10px) rotate(-4deg);}
+    80%{transform:translateX(10px) rotate(4deg);}
+  }
+  #itemName{
+    margin-top:10px;
+    background:#fff;
+    padding:5px 20px;
+    border-radius:22px;
+    font-size:clamp(18px,3vw,26px);
+    font-weight:bold;
+    color:var(--ink);
+    box-shadow:0 4px 0 rgba(0,0,0,0.1);
+  }
+  #baskets{
+    position:absolute;
+    bottom:3%;
+    left:0; right:0;
+    display:flex;
+    justify-content:space-around;
+    padding:0 3%;
+    z-index:5;
+  }
+  .basket{
+    width:clamp(150px,26vw,260px);
+    height:clamp(120px,18vw,180px);
+    border-radius:24px 24px 40px 40px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:flex-end;
+    padding-bottom:12px;
+    box-shadow:0 8px 0 rgba(0,0,0,0.15);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+    position:relative;
+    border:6px solid rgba(255,255,255,0.6);
+  }
+  .basket.fruit{ background:var(--fruit-basket); }
+  .basket.veg{ background:var(--veg-basket); }
+  .basket .label{
+    background:#fff;
+    padding:4px 16px;
+    border-radius:16px;
+    font-size:clamp(16px,3vw,24px);
+    font-weight:bold;
+    color:var(--ink);
+  }
+  .basket .icon-row{
+    font-size:clamp(20px,3.6vw,30px);
+    margin-bottom:5px;
+  }
+  .basket.hover{
+    transform:scale(1.08);
+    box-shadow:0 12px 0 rgba(0,0,0,0.2), 0 0 0 8px rgba(255,255,255,0.5);
+  }
+  #feedback{
+    position:absolute;
+    top:34%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0);
+    font-size:clamp(36px,7vw,80px);
+    font-weight:bold;
+    z-index:40;
+    pointer-events:none;
+    text-shadow:2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff;
+  }
+  #feedback.show-good{
+    color:var(--pop2);
+    animation:feedbackPop 0.9s ease forwards;
+  }
+  #feedback.show-bad{
+    color:var(--pop);
+    animation:feedbackPop 0.9s ease forwards;
+  }
+  @keyframes feedbackPop{
+    0%{transform:translate(-50%,-50%) scale(0); opacity:0;}
+    30%{transform:translate(-50%,-50%) scale(1.2); opacity:1;}
+    70%{transform:translate(-50%,-50%) scale(1); opacity:1;}
+    100%{transform:translate(-50%,-50%) scale(1); opacity:0;}
+  }
+  .confetti{
+    position:absolute;
+    width:14px; height:14px;
+    top:32%;
+    border-radius:3px;
+    z-index:30;
+    pointer-events:none;
+    animation:fall 1.4s ease-in forwards;
+  }
+  @keyframes fall{
+    0%{transform:translateY(0) rotate(0deg); opacity:1;}
+    100%{transform:translateY(60vh) rotate(360deg); opacity:0;}
+  }
+  #endScreen{
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+  }
+  #endScreen.show{ display:flex; }
+  #endCard{
+    background:#fff;
+    border-radius:32px;
+    padding:40px 30px;
+    text-align:center;
+    max-width:90vw;
+    box-shadow:0 20px 40px rgba(0,0,0,0.3);
+  }
+  #endCard h2{
+    font-size:clamp(26px,5vw,40px);
+    margin:0 0 10px;
+    color:#2b2b2b;
+  }
+  #endCard p{
+    font-size:clamp(18px,3vw,24px);
+    color:#555;
+    margin:0 0 20px;
+  }
+  #playAgain{
+    font-size:clamp(20px,3vw,26px);
+    font-weight:bold;
+    background:var(--pop2);
+    color:#fff;
+    border:none;
+    border-radius:24px;
+    padding:14px 32px;
+    cursor:pointer;
+    box-shadow:0 6px 0 #12703f;
+  }
+  #playAgain:active{
+    transform:translateY(4px);
+    box-shadow:0 2px 0 #12703f;
+  }
+</style>
+</head>
+<body>
+
+<button id="soundToggle" title="Звук">🔊</button>
+<div id="sun"></div>
+<div class="cloud" style="top:56px; left:8%; width:80px; height:30px;"></div>
+<div class="cloud" style="top:100px; left:72%; width:60px; height:24px;"></div>
+
+<div id="game">
+  <header>
+    <h1>🍎 Плодове и зеленчуци 🥕</h1>
+    <div id="stars">⭐ 0</div>
+  </header>
+
+  <div id="stage">
+    <div id="item-wrap">
+      <div id="item"></div>
+      <div id="itemName"></div>
+    </div>
+
+    <div id="feedback"></div>
+
+    <div id="baskets">
+      <div class="basket fruit" data-type="fruit">
+        <div class="icon-row">🍓🍌</div>
+        <div class="label">Плодове</div>
+      </div>
+      <div class="basket veg" data-type="veg">
+        <div class="icon-row">🥕🥦</div>
+        <div class="label">Зеленчуци</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="endScreen">
+  <div id="endCard">
+    <h2>🎉 Браво, шампионе! 🎉</h2>
+    <p>Ти позна всички плодове и зеленчуци!</p>
+    <button id="playAgain">Играй пак</button>
+  </div>
+</div>
+
+<script>
+const items = [
+  {emoji:'🍎', name:'Ябълка', type:'fruit'},
+  {emoji:'🍌', name:'Банан', type:'fruit'},
+  {emoji:'🍇', name:'Грозде', type:'fruit'},
+  {emoji:'🍊', name:'Портокал', type:'fruit'},
+  {emoji:'🍓', name:'Ягода', type:'fruit'},
+  {emoji:'🍉', name:'Диня', type:'fruit'},
+  {emoji:'🍑', name:'Праскова', type:'fruit'},
+  {emoji:'🥕', name:'Морков', type:'veg'},
+  {emoji:'🍅', name:'Домат', type:'veg'},
+  {emoji:'🥦', name:'Броколи', type:'veg'},
+  {emoji:'🥒', name:'Краставица', type:'veg'},
+  {emoji:'🌽', name:'Царевица', type:'veg'},
+  {emoji:'🍆', name:'Патладжан', type:'veg'},
+  {emoji:'🫑', name:'Чушка', type:'veg'}
+];
+
+const ROUND_LENGTH = 10;
+let deck = [];
+let currentIndex = 0;
+let stars = 0;
+let dragging = false;
+let startX, startY, itemOrigLeft, itemOrigTop;
+let itemEl, wrapEl;
+let soundOn = true;
+
+/* ---------- Звук (Web Audio API, без нужда от файлове) ---------- */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, duration, type='sine', delay=0, gainVal=0.25){
+  if(!soundOn) return;
+  ensureAudio();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.value = gainVal;
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  const t0 = audioCtx.currentTime + delay;
+  osc.start(t0);
+  gain.gain.setValueAtTime(gainVal, t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.stop(t0 + duration + 0.02);
+}
+function playCorrectSound(){
+  // весела възходяща мелодийка
+  playTone(523.25, 0.14, 'triangle', 0);     // C5
+  playTone(659.25, 0.14, 'triangle', 0.12);  // E5
+  playTone(783.99, 0.22, 'triangle', 0.24);  // G5
+}
+function playWrongSound(){
+  playTone(220, 0.25, 'sawtooth', 0, 0.15);
+  playTone(196, 0.3, 'sawtooth', 0.12, 0.12);
+}
+function playPickupSound(){
+  playTone(440, 0.08, 'sine', 0, 0.12);
+}
+function playWinSound(){
+  [523.25,587.33,659.25,698.46,783.99,880].forEach((f,i)=>{
+    playTone(f, 0.2, 'triangle', i*0.12, 0.2);
+  });
+}
+
+/* ---------- Глас (изговаря името на плода/зеленчука) ---------- */
+let bgVoice = null;
+function pickVoice(){
+  const voices = speechSynthesis.getVoices();
+  bgVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('bg')) || null;
+}
+if('speechSynthesis' in window){
+  pickVoice();
+  speechSynthesis.onvoiceschanged = pickVoice;
+}
+function speak(text){
+  if(!soundOn) return;
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'bg-BG';
+  if(bgVoice) u.voice = bgVoice;
+  u.rate = 0.9;
+  u.pitch = 1.15;
+  speechSynthesis.speak(u);
+}
+
+/* ---------- Логика на играта ---------- */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function buildDeck(){
+  let pool = shuffle(items);
+  deck = [];
+  for(let i=0;i<ROUND_LENGTH;i++){
+    deck.push(pool[i % pool.length]);
+  }
+  deck = shuffle(deck);
+}
+
+function updateStars(){
+  document.getElementById('stars').textContent = '⭐ ' + stars;
+}
+
+function loadItem(){
+  if(currentIndex >= deck.length){
+    showEnd();
+    return;
+  }
+  const it = deck[currentIndex];
+  itemEl.textContent = it.emoji;
+  itemEl.dataset.type = it.type;
+  document.getElementById('itemName').textContent = it.name;
+  itemEl.style.position = 'static';
+  itemEl.style.left = '';
+  itemEl.style.top = '';
+  itemEl.classList.remove('correct','wrong','dragging');
+  speak(it.name);
+}
+
+function showEnd(){
+  document.getElementById('endScreen').classList.add('show');
+  playWinSound();
+  speak('Браво, шампионе! Ти позна всички плодове и зеленчуци!');
+}
+
+function resetGame(){
+  stars = 0;
+  currentIndex = 0;
+  updateStars();
+  buildDeck();
+  document.getElementById('endScreen').classList.remove('show');
+  loadItem();
+}
+
+function spawnConfetti(){
+  const colors = ['#ff595e','#ffca3a','#8ac926','#1982c4','#6a4c93'];
+  for(let i=0;i<26;i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = (8 + Math.random()*84) + 'vw';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDelay = (Math.random()*0.3)+'s';
+    document.getElementById('game').appendChild(c);
+    setTimeout(()=>c.remove(), 1600);
+  }
+}
+
+function showFeedback(good){
+  const fb = document.getElementById('feedback');
+  fb.textContent = good ? '👍 Браво!' : '🙂 Опитай пак!';
+  fb.className = '';
+  void fb.offsetWidth;
+  fb.classList.add(good ? 'show-good' : 'show-bad');
+}
+
+function getBasketUnderPoint(x,y){
+  const baskets = document.querySelectorAll('.basket');
+  for(const b of baskets){
+    const r = b.getBoundingClientRect();
+    if(x >= r.left && x <= r.right && y >= r.top && y <= r.bottom){
+      return b;
+    }
+  }
+  return null;
+}
+
+function clearBasketHover(){
+  document.querySelectorAll('.basket').forEach(b=>b.classList.remove('hover'));
+}
+
+function pointerDown(e){
+  dragging = true;
+  ensureAudio();
+  playPickupSound();
+  const p = getPoint(e);
+  const rect = itemEl.getBoundingClientRect();
+  startX = p.x; startY = p.y;
+  itemOrigLeft = rect.left;
+  itemOrigTop = rect.top;
+  itemEl.style.position = 'fixed';
+  itemEl.style.left = itemOrigLeft + 'px';
+  itemEl.style.top = itemOrigTop + 'px';
+  itemEl.style.margin = '0';
+  itemEl.classList.add('dragging');
+  e.preventDefault();
+}
+
+function getPoint(e){
+  if(e.touches && e.touches.length){
+    return {x:e.touches[0].clientX, y:e.touches[0].clientY};
+  }
+  return {x:e.clientX, y:e.clientY};
+}
+
+function pointerMove(e){
+  if(!dragging) return;
+  const p = getPoint(e);
+  const dx = p.x - startX;
+  const dy = p.y - startY;
+  itemEl.style.left = (itemOrigLeft + dx) + 'px';
+  itemEl.style.top = (itemOrigTop + dy) + 'px';
+
+  clearBasketHover();
+  const basket = getBasketUnderPoint(p.x,p.y);
+  if(basket) basket.classList.add('hover');
+  e.preventDefault();
+}
+
+function pointerUp(e){
+  if(!dragging) return;
+  dragging = false;
+  itemEl.classList.remove('dragging');
+  clearBasketHover();
+
+  const p = e.changedTouches ? {x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY} : {x:e.clientX, y:e.clientY};
+  const basket = getBasketUnderPoint(p.x, p.y);
+
+  if(basket){
+    const chosenType = basket.dataset.type;
+    const correctType = itemEl.dataset.type;
+    if(chosenType === correctType){
+      stars++;
+      updateStars();
+      showFeedback(true);
+      spawnConfetti();
+      playCorrectSound();
+      speak('Браво!');
+      itemEl.classList.add('correct');
+      currentIndex++;
+      setTimeout(loadItem, 700);
+    } else {
+      showFeedback(false);
+      playWrongSound();
+      speak('Опитай пак!');
+      itemEl.classList.add('wrong');
+      setTimeout(()=>{
+        itemEl.classList.remove('wrong');
+        itemEl.style.position = 'static';
+        itemEl.style.left=''; itemEl.style.top='';
+      }, 500);
+    }
+  } else {
+    itemEl.style.position = 'static';
+    itemEl.style.left=''; itemEl.style.top='';
+  }
+}
+
+function toggleSound(){
+  soundOn = !soundOn;
+  document.getElementById('soundToggle').textContent = soundOn ? '🔊' : '🔇';
+  if(!soundOn && 'speechSynthesis' in window) speechSynthesis.cancel();
+}
+
+function init(){
+  itemEl = document.getElementById('item');
+  wrapEl = document.getElementById('item-wrap');
+
+  itemEl.addEventListener('mousedown', pointerDown);
+  document.addEventListener('mousemove', pointerMove);
+  document.addEventListener('mouseup', pointerUp);
+
+  itemEl.addEventListener('touchstart', pointerDown, {passive:false});
+  document.addEventListener('touchmove', pointerMove, {passive:false});
+  document.addEventListener('touchend', pointerUp);
+
+  document.getElementById('playAgain').addEventListener('click', resetGame);
+  document.getElementById('soundToggle').addEventListener('click', toggleSound);
+
+  resetGame();
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

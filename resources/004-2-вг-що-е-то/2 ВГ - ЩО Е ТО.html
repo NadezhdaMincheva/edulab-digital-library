@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Технологично табло: Тема „Що е то?“ – БЕЛ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fff9db;
+            color: #495057;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            border: 3px solid #fcc419;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #d9480f;
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #868e96;
+            font-size: 1.1rem;
+            margin-top: 0;
+        }
+        .dos-box {
+            background-color: #fff4e6;
+            border-left: 5px solid #ff922b;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .dos-box h3 {
+            margin: 0 0 10px 0;
+            color: #d9480f;
+        }
+        .dos-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .dos-box li {
+            margin-bottom: 5px;
+        }
+        .riddle-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 650px) {
+            .riddle-grid { grid-template-columns: 1fr; }
+        }
+        .riddle-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .riddle-text {
+            font-size: 1.2rem;
+            font-style: italic;
+            color: #212529;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        .answer-zone {
+            margin-top: 10px;
+        }
+        .btn-reveal {
+            background: #ff922b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-reveal:hover {
+            background: #f76707;
+        }
+        .answer-text {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2b8a3e;
+            margin-top: 10px;
+            display: none;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .methodology {
+            background-color: #e3faffc7;
+            border-left: 5px solid #15aabf;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Интерактивно табло: „Що е то?“</h1>
+        <p class="subtitle">Образователен ресурс по Български език и литература (БЕЛ)</p>
+    </div>
+
+    <!-- ДОС и Очаквани резултати -->
+    <div class="dos-box">
+        <h3>Държавни образователни стандарти (ДОС)</h3>
+        <strong>Възрастова група:</strong> Втора възрастова група (4-5 години)<br>
+        <strong>Направление:</strong> Български език и литература (Възприемане на литературно произведение)<br>
+        <strong>Очаквани резултати:</strong>
+        <ul>
+            <li>Възприема гатанките като литературен жанр.</li>
+            <li>Осмисля съдържанието на текста на гатанката.</li>
+            <li>Свързва конкретен отговор със съдържанието на гатанката.</li>
+        </ul>
+    </div>
+
+    <p style="font-size: 1.05rem; line-height: 1.5;">
+        <em>Указание за съвместна работа:</em> Учителят прочита бавно и изразително текста на гатанката. Стимулира децата да помислят кои думички ни подсказват отговора (напр. "дълги уши"). След като децата изкажат своите предположения, се натиска бутонът <strong>„🔍 Що е то?“</strong> за проверка.
+    </p>
+
+    <!-- Сетка с гатанки -->
+    <div class="riddle-grid">
+        
+        <!-- Гатанка 1 -->
+        <div class="riddle-card">
+            <div class="riddle-text">
+                „Сив е, има дълги уши,<br>
+                обича морковчета да хруска<br>
+                и бързо-бързо в гората подскача.<br>
+                Що е то?“
+            </div>
+            <div class="answer-zone">
+                <button class="btn-reveal" onclick="revealAnswer(this)">🔍 Що е то?</button>
+                <div class="answer-text">🐰 Зайчето!</div>
+            </div>
+        </div>
+
+        <!-- Гатанка 2 -->
+        <div class="riddle-card">
+            <div class="riddle-text">
+                „На небето сутрин се събужда,<br>
+                грее силно, златни лъчи праща<br>
+                и земята топло ни прегръща.<br>
+                Що е то?“
+            </div>
+            <div class="answer-zone">
+                <button class="btn-reveal" onclick="revealAnswer(this)">🔍 Що е то?</button>
+                <div class="answer-text">☀️ Слънцето!</div>
+            </div>
+        </div>
+
+        <!-- Гатанка 3 -->
+        <div class="riddle-card">
+            <div class="riddle-text">
+                „Има си къщичка на гърба,<br>
+                бавно, бавно по тревата ходи.<br>
+                Щом се уплаши — вътре се скрива.<br>
+                Що е то?“
+            </div>
+            <div class="answer-zone">
+                <button class="btn-reveal" onclick="revealAnswer(this)">🔍 Що е то?</button>
+                <div class="answer-text">🐌 Охлювът!</div>
+            </div>
+        </div>
+
+        <!-- Гатанка 4 -->
+        <div class="riddle-card">
+            <div class="riddle-text">
+                „Има четири колела,<br>
+                бръмчи силно по асфалта,<br>
+                татко я кара с волан в ръка.<br>
+                Що е то?“
+            </div>
+            <div class="answer-zone">
+                <button class="btn-reveal" onclick="revealAnswer(this)">🔍 Що е то?</button>
+                <div class="answer-text">🚗 Колата!</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Методически насоки -->
+    <div class="methodology">
+        <strong>💡 Методически бележки за педагогическото взаимодействие:</strong>
+        <p style="margin: 5px 0 0 0;">
+            За постигане на <em>емоционално осмисляне</em>, след показване на отговора, попитайте децата: „Кои думички ви помогнаха да познаете?“. Можете да ги стимулирате да пресъздадат отговора с жестове (напр. да покажат ушички на зайче или как се крие охлювът), което затвърждава разбирането на текста чрез игрови методи.
+        </p>
+    </div>
+</div>
+
+<script>
+    function revealAnswer(button) {
+        // Намираме следващия елемент, който съдържа отговора
+        const answer = button.nextElementSibling;
+        
+        if (answer.style.display === "block") {
+            answer.style.display = "none";
+            button.innerText = "🔍 Що е то?";
+            button.style.background = "#ff922b";
+        } else {
+            answer.style.display = "block";
+            button.innerText = "🔄 Скрий отговора";
+            button.style.background = "#495057";
+        }
+    }
+</script>
+
+</body>
+</html>

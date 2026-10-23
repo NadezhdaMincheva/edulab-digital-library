@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Едно и Много - Интерактивна игра</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    height: 100%;
+    font-family: "Comic Sans MS", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+    overflow: hidden;
+    touch-action: none;
+  }
+  h1 {
+    text-align: center;
+    font-size: 3.5rem;
+    color: #ff6b6b;
+    text-shadow: 2px 2px 0px #ffd93d;
+    margin: 10px 0;
+  }
+  #game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh;
+    padding: 10px;
+  }
+  #items-pool {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    width: 95%;
+    min-height: 140px;
+  }
+  .item {
+    font-size: 5rem;
+    cursor: grab;
+    user-select: none;
+    padding: 10px;
+    background: #fff8dc;
+    border-radius: 15px;
+    border: 3px solid #ffd93d;
+    transition: transform 0.2s, box-shadow 0.2s;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    min-height: 120px;
+  }
+  .item:active { cursor: grabbing; transform: scale(1.1); }
+  .item.dragging { opacity: 0.5; transform: scale(1.1); }
+  #columns {
+    display: flex;
+    justify-content: space-around;
+    width: 95%;
+    flex-grow: 1;
+    gap: 30px;
+    margin: 15px 0;
+  }
+  .column {
+    flex: 1;
+    border-radius: 25px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 300px;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .column-header {
+    font-size: 2.5rem;
+    font-weight: bold;
+    padding: 10px 30px;
+    border-radius: 15px;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    margin-bottom: 15px;
+  }
+  #left-col {
+    background: #e0f7fa;
+    border: 4px dashed #26c6da;
+  }
+  #left-col .column-header { background: #26c6da; }
+  #right-col {
+    background: #fce4ec;
+    border: 4px dashed #ec407a;
+  }
+  #right-col .column-header { background: #ec407a; }
+  .drop-zone {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: flex-start;
+    gap: 15px;
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+    padding: 10px;
+  }
+  .column.drag-over { background: #fff9c4 !important; }
+  #message {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: #fff;
+    padding: 40px 60px;
+    border-radius: 30px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    text-align: center;
+    font-size: 3rem;
+    color: #2e7d32;
+    z-index: 1000;
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+  }
+  #message.show { transform: translate(-50%, -50%) scale(1); pointer-events: auto; }
+  #message .emoji { font-size: 5rem; display: block; margin-bottom: 10px; }
+  #reset-btn {
+    position: fixed;
+    bottom: 20px; right: 20px;
+    font-size: 1.5rem;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 50px;
+    background: #ff6b6b;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    transition: background 0.2s;
+    z-index: 100;
+  }
+  #reset-btn:hover { background: #ee5a5a; }
+  #instructions {
+    font-size: 1.5rem;
+    color: #555;
+    margin-bottom: 5px;
+    text-align: center;
+  }
+  @media (max-width: 768px) {
+    h1 { font-size: 2rem; }
+    .item { font-size: 3rem; min-width: 80px; min-height: 80px; }
+    .column-header { font-size: 1.5rem; }
+    #message { font-size: 1.8rem; padding: 20px 30px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="game-area">
+  <h1>🎮 Едно и Много</h1>
+  <p id="instructions">👆 Плъзни картинките в правилната колона!</p>
+  
+  <div id="columns">
+    <div class="column" id="left-col" data-type="one">
+      <div class="column-header">Едно (1)</div>
+      <div class="drop-zone" id="zone-one"></div>
+    </div>
+    <div class="column" id="right-col" data-type="many">
+      <div class="column-header">Много (2+)</div>
+      <div class="drop-zone" id="zone-many"></div>
+    </div>
+  </div>
+  
+  <div id="items-pool"></div>
+</div>
+
+<div id="message">
+  <span class="emoji">🌟</span>
+  <div>Браво! Супер!</div>
+</div>
+
+<button id="reset-btn">🔄 Нова игра</button>
+
+<script>
+const itemsData = [
+  { id: 'flower-1', emoji: '🌸', type: 'one', label: 'Цвете' },
+  { id: 'flowers-many', emoji: '🌸🌸🌸', type: 'many', label: 'Цветя' },
+  { id: 'butterfly-1', emoji: '🦋', type: 'one', label: 'Пеперуда' },
+  { id: 'butterflies-many', emoji: '🦋🦋🦋', type: 'many', label: 'Пеперуди' },
+  { id: 'ball-1', emoji: '⚽', type: 'one', label: 'Топка' },
+  { id: 'balls-many', emoji: '⚽🏀🎾', type: 'many', label: 'Топки' },
+  { id: 'apple-1', emoji: '🍎', type: 'one', label: 'Ябълка' },
+  { id: 'apples-many', emoji: '🍎🍏🍎', type: 'many', label: 'Ябълки' },
+  { id: 'sun-1', emoji: '☀️', type: 'one', label: 'Слънце' },
+  { id: 'suns-many', emoji: '☀️☀️☀️', type: 'many', label: 'Слънца' },
+  { id: 'star-1', emoji: '⭐', type: 'one', label: 'Звезда' },
+  { id: 'stars-many', emoji: '⭐⭐⭐', type: 'many', label: 'Звезди' },
+  { id: 'car-1', emoji: '🚗', type: 'one', label: 'Кола' },
+  { id: 'cars-many', emoji: '🚗🚕🚙', type: 'many', label: 'Коли' },
+  { id: 'fish-1', emoji: '🐟', type: 'one', label: 'Риба' },
+  { id: 'fish-many', emoji: '🐟🐠🐡', type: 'many', label: 'Риби' },
+];
+
+let placedCount = 0;
+
+function initGame() {
+  const pool = document.getElementById('items-pool');
+  const zoneOne = document.getElementById('zone-one');
+  const zoneMany = document.getElementById('zone-many');
+  pool.innerHTML = '';
+  zoneOne.innerHTML = '';
+  zoneMany.innerHTML = '';
+  placedCount = 0;
+  document.getElementById('message').classList.remove('show');
+  
+  const shuffled = [...itemsData].sort(() => Math.random() - 0.5);
+  shuffled.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'item';
+    el.draggable = true;
+    el.dataset.id = item.id;
+    el.dataset.type = item.type;
+    el.textContent = item.emoji;
+    el.title = item.label;
+    pool.appendChild(el);
+    addDragEvents(el);
+  });
+}
+
+let draggedEl = null;
+let touchClone = null;
+
+function addDragEvents(el) {
+  // Desktop drag
+  el.addEventListener('dragstart', e => {
+    draggedEl = el;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    draggedEl = null;
+  });
+  
+  // Touch events for interactive board
+  el.addEventListener('touchstart', handleTouchStart, {passive: false});
+  el.addEventListener('touchmove', handleTouchMove, {passive: false});
+  el.addEventListener('touchend', handleTouchEnd, {passive: false});
+}
+
+function handleTouchStart(e) {
+  e.preventDefault();
+  draggedEl = e.currentTarget;
+  const touch = e.touches[0];
+  touchClone = draggedEl.cloneNode(true);
+  touchClone.style.position = 'fixed';
+  touchClone.style.zIndex = '9999';
+  touchClone.style.pointerEvents = 'none';
+  touchClone.style.left = (touch.clientX - 60) + 'px';
+  touchClone.style.top = (touch.clientY - 60) + 'px';
+  touchClone.style.width = '120px';
+  touchClone.style.height = '120px';
+  touchClone.style.fontSize = '5rem';
+  touchClone.style.opacity = '0.9';
+  document.body.appendChild(touchClone);
+  draggedEl.classList.add('dragging');
+}
+
+function handleTouchMove(e) {
+  e.preventDefault();
+  if (!touchClone) return;
+  const touch = e.touches[0];
+  touchClone.style.left = (touch.clientX - 60) + 'px';
+  touchClone.style.top = (touch.clientY - 60) + 'px';
+  
+  const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (!elemBelow) return;
+  const col = elemBelow.closest('.column');
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+  if (col) col.classList.add('drag-over');
+}
+
+function handleTouchEnd(e) {
+  e.preventDefault();
+  if (!touchClone || !draggedEl) return;
+  const touch = e.changedTouches[0];
+  const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  const col = elemBelow ? elemBelow.closest('.column') : null;
+  
+  if (col) {
+    const type = col.dataset.type;
+    if (draggedEl.dataset.type === type) {
+      col.querySelector('.drop-zone').appendChild(draggedEl);
+      placedCount++;
+      checkWin();
+    } else {
+      shakeElement(draggedEl);
+    }
+  }
+  
+  touchClone.remove();
+  touchClone = null;
+  draggedEl.classList.remove('dragging');
+  draggedEl = null;
+  document.querySelectorAll('.column').forEach(c => c.classList.remove('drag-over'));
+}
+
+function shakeElement(el) {
+  el.style.transform = 'translateX(-10px)';
+  setTimeout(() => el.style.transform = 'translateX(10px)', 100);
+  setTimeout(() => el.style.transform = 'translateX(-10px)', 200);
+  setTimeout(() => el.style.transform = 'translateX(10px)', 300);
+  setTimeout(() => el.style.transform = 'translateX(0)', 400);
+}
+
+// Drop zone events
+function setupDropZones() {
+  document.querySelectorAll('.column').forEach(col => {
+    col.addEventListener('dragover', e => {
+      e.preventDefault();
+      col.classList.add('drag-over');
+    });
+    col.addEventListener('dragleave', () => {
+      col.classList.remove('drag-over');
+    });
+    col.addEventListener('drop', e => {
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      if (!draggedEl) return;
+      const type = col.dataset.type;
+      if (draggedEl.dataset.type === type) {
+        col.querySelector('.drop-zone').appendChild(draggedEl);
+        placedCount++;
+        checkWin();
+      } else {
+        shakeElement(draggedEl);
+      }
+    });
+  });
+}
+
+function checkWin() {
+  if (placedCount === itemsData.length) {
+    const msg = document.getElementById('message');
+    msg.querySelector('.emoji').textContent = ['🎉','🏆','🌟','🥳'][Math.floor(Math.random()*4)];
+    msg.querySelector('div').textContent = ['Браво! Супер!','Отлично!','Всички са на място!','Умниче!'][Math.floor(Math.random()*4)];
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 3000);
+  }
+}
+
+document.getElementById('reset-btn').addEventListener('click', initGame);
+
+initGame();
+setupDropZones();
+</script>
+</body>
+</html>

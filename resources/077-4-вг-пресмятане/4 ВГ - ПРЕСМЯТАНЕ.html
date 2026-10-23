@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Математическа Битка</title>
+    <!-- Зареждане на React и Babel директно в браузъра -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #root { height: 100%; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+
+        const MathDuel = () => {
+            const [gameState, setGameState] = useState('playing');
+            const [winner, setWinner] = useState(null);
+            const [p1Score, setP1Score] = useState(0);
+            const [p1Problem, setP1Problem] = useState({ a: 0, b: 0, op: '+', ans: 0 });
+            const [p1Input, setP1Input] = useState('');
+            const [p2Score, setP2Score] = useState(0);
+            const [p2Problem, setP2Problem] = useState({ a: 0, b: 0, op: '+', ans: 0 });
+            const [p2Input, setP2Input] = useState('');
+
+            const generateProblem = useCallback(() => {
+                const isAddition = Math.random() > 0.5;
+                let a, b, ans;
+                if (isAddition) {
+                    ans = Math.floor(Math.random() * 11);
+                    a = Math.floor(Math.random() * (ans + 1));
+                    b = ans - a;
+                    return { a, b, op: '+', ans };
+                } else {
+                    a = Math.floor(Math.random() * 11);
+                    b = Math.floor(Math.random() * (a + 1));
+                    ans = a - b;
+                    return { a, b, op: '-', ans };
+                }
+            }, []);
+
+            useEffect(() => {
+                setP1Problem(generateProblem());
+                setP2Problem(generateProblem());
+            }, [generateProblem]);
+
+            useEffect(() => {
+                if (p1Score >= 10) { setWinner('Кученцето 🐶'); setGameState('finished'); }
+                else if (p2Score >= 10) { setWinner('Котенцето 🐱'); setGameState('finished'); }
+            }, [p1Score, p2Score]);
+
+            const handleInput = (player, val) => {
+                if (player === 1) { if (p1Input.length < 2) setP1Input(prev => prev + val); }
+                else { if (p2Input.length < 2) setP2Input(prev => prev + val); }
+            };
+
+            const clearInput = (player) => player === 1 ? setP1Input('') : setP2Input('');
+
+            const checkAnswer = (player) => {
+                if (player === 1) {
+                    if (parseInt(p1Input) === p1Problem.ans) {
+                        setP1Score(s => s + 1); setP1Input(''); setP1Problem(generateProblem());
+                    } else { setP1Input(''); }
+                } else {
+                    if (parseInt(p2Input) === p2Problem.ans) {
+                        setP2Score(s => s + 1); setP2Input(''); setP2Problem(generateProblem());
+                    } else { setP2Input(''); }
+                }
+            };
+
+            const styles = {
+                container: { display: 'flex', width: '100%', height: '100vh', touchAction: 'none' },
+                playerArea: { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', userSelect: 'none' },
+                scoreBoard: { fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '10px' },
+                character: { fontSize: '6rem', margin: '10px 0' },
+                mathDisplay: { fontSize: '4rem', fontWeight: 'bold', backgroundColor: 'white', padding: '20px', borderRadius: '20px', boxShadow: '0 10px 20px rgba(0,0,0,0.1)', minWidth: '250px', textAlign: 'center', marginBottom: '20px' },
+                grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', width: '100%', maxWidth: '320px' },
+                btn: { fontSize: '2rem', padding: '20px', border: 'none', borderRadius: '15px', backgroundColor: '#fff', boxShadow: '0 5px #bbb', cursor: 'pointer', fontWeight: 'bold' },
+                winScreen: { width: '100%', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f0f0', textAlign: 'center' }
+            };
+
+            if (gameState === 'finished') {
+                return (
+                    <div style={styles.winScreen}>
+                        <h1 style={{fontSize: '3rem'}}>Браво! 🏆</h1>
+                        <h2 style={{fontSize: '4rem'}}>{winner} спечели!</h2>
+                        <button onClick={() => window.location.reload()} style={{...styles.btn, backgroundColor: '#4CAF50', color: 'white', padding: '20px 50px', marginTop: '30px'}}>НОВА ИГРА</button>
+                    </div>
+                );
+            }
+
+            return (
+                <div style={styles.container}>
+                    <div style={{ ...styles.playerArea, backgroundColor: '#bbdefb' }}>
+                        <div style={styles.scoreBoard}>Точки: {p1Score}</div>
+                        <div style={styles.character}>🐶</div>
+                        <div style={styles.mathDisplay}>{p1Problem.a} {p1Problem.op} {p1Problem.b} = {p1Input}</div>
+                        <div style={styles.grid}>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => <button key={n} style={styles.btn} onPointerDown={() => handleInput(1, n.toString())}>{n}</button>)}
+                            <button style={{...styles.btn, backgroundColor: '#ff5252'}} onPointerDown={() => clearInput(1)}>😲</button>
+                            <button style={{...styles.btn, backgroundColor: '#4CAF50'}} onPointerDown={() => checkAnswer(1)}>😊</button>
+                        </div>
+                    </div>
+                    <div style={{ ...styles.playerArea, backgroundColor: '#ffcdd2' }}>
+                        <div style={styles.scoreBoard}>Точки: {p2Score}</div>
+                        <div style={styles.character}>🐱</div>
+                        <div style={styles.mathDisplay}>{p2Problem.a} {p2Problem.op} {p2Problem.b} = {p2Input}</div>
+                        <div style={styles.grid}>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => <button key={n} style={styles.btn} onPointerDown={() => handleInput(2, n.toString())}>{n}</button>)}
+                            <button style={{...styles.btn, backgroundColor: '#ff5252'}} onPointerDown={() => clearInput(2)}>😲</button>
+                            <button style={{...styles.btn, backgroundColor: '#4CAF50'}} onPointerDown={() => checkAnswer(2)}>😊</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MathDuel />);
+    </script>
+</body>
+</html>

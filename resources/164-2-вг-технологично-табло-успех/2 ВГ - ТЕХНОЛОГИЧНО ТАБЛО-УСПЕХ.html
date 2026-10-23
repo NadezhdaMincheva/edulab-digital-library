@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Технологично табло: Тема „УСПЕХ“ – Физическа култура</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            color: #2c3e50;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-top: 8px solid #ff9800;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #1a365d;
+            font-size: 2rem;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+            margin-top: 0;
+        }
+        .dos-box {
+            background-color: #fff3e0;
+            border-left: 5px solid #ff9800;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        .dos-box h3 {
+            margin: 0 0 10px 0;
+            color: #e65100;
+        }
+        .dos-box ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .dos-box li {
+            margin-bottom: 5px;
+        }
+        h2 {
+            color: #1a365d;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            font-size: 1.4rem;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 650px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #2b6cb0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Стилизация на Колелото */
+        .wheel-zone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #edf2f7;
+            padding: 30px;
+            border-radius: 16px;
+            border: 2px dashed #cbd5e0;
+            margin-top: 20px;
+            position: relative;
+        }
+        .wheel-wrapper {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin-bottom: 20px;
+        }
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #e53e3e;
+            z-index: 10;
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 6px solid #1a365d;
+            background: conic-gradient(
+                #ff9800 0deg 90deg, 
+                #2196f3 90deg 180deg, 
+                #4caf50 180deg 270deg, 
+                #9c27b0 270deg 360deg
+            );
+            transition: transform 3s cubic-bezier(0.1, 0.8, 0.1, 1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        .spin-btn {
+            background: #e65100;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.2s, transform 0.1s;
+        }
+        .spin-btn:hover { background: #bf360c; }
+        .spin-btn:active { transform: scale(0.95); }
+        
+        .result-display {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1a365d;
+            text-align: center;
+            min-height: 50px;
+            padding: 10px;
+            background: #ffffff;
+            border-radius: 8px;
+            width: 90%;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .methodology {
+            background-color: #ebf8ff;
+            border-left: 5px solid #3182ce;
+            padding: 15px 20px;
+            border-radius: 6px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Технологично табло: „УСПЕХ“</h1>
+        <p class="subtitle">Интерактивен образователен ресурс по Физическа култура</p>
+    </div>
+
+    <!-- ДОС и Очаквани резултати -->
+    <div class="dos-box">
+        <h3>Държавни образователни стандарти (ДОС)</h3>
+        <strong>Възрастова група:</strong> Втора възрастова група (4-5 години)<br>
+        <strong>Очаквани резултати:</strong>
+        <ul>
+            <li>Изпълнява комбинация от ЕПД (Естествено-приложни движения).</li>
+            <li>Бяга в права посока до определена цел за време.</li>
+            <li>Хвърля малка плътна топка в далечина и във вертикална цел с една ръка над рамо.</li>
+        </ul>
+    </div>
+
+    <h2>Модул 1: Дисциплини за постигане на „Успех“</h2>
+    <div class="grid">
+        <div class="card">
+            <h3>🏃‍♂️ Бягане в права посока</h3>
+            <p>Децата се състезават по двойки или по групички в коридор с дължина 15 метра. Целта е бързо пробегване на разстоянието до конус или маркировка (за време/сигнал).</p>
+        </div>
+        <div class="card">
+            <h3>🎯 Точен мерник (Вертикална цел)</h3>
+            <p>Хвърляне на малка топка с една ръка над рамото с цел да се уцели поставен на стената обръч или табло на височината на гърдите на детето.</p>
+        </div>
+    </div>
+    
+    <div class="grid">
+        <div class="card">
+            <h3>🚀 Хвърляне в далечина</h3>
+            <p>Изтласкване на малката плътна топка силно напред и нагоре над рамото, за да достигне максимално разстояние по дължината на салона или двора.</p>
+        </div>
+        <div class="card">
+            <h3>🏆 Комбинация „Успех“</h3>
+            <p>Свързване на движенията в забавно трасе: Бързо бягане в права посока, вземане на топка от коша и веднага хвърляне във вертикалната цел.</p>
+        </div>
+    </div>
+
+    <h2>Модул 2: Интерактивно колело на късмета „Задачи за успех“</h2>
+    <p><em>Инструкция: Натиснете бутона „ЗАВЪРТИ“, за да изберете случайно спортно предизвикателство за децата от групата!</em></p>
+    
+    <div class="wheel-zone">
+        <div class="pointer"></div>
+        <div class="wheel-wrapper">
+            <div class="wheel" id="lucky-wheel"></div>
+        </div>
+        <button class="spin-btn" onclick="spinWheel()">🎲 ЗАВЪРТИ КОЛЕЛОТО</button>
+        <div class="result-display" id="wheel-result">Кликнете на бутона, за да разберете задачата...</div>
+    </div>
+
+    <!-- Методически бележки -->
+    <div class="methodology">
+        <strong>🥇 Насоки за учителя (Емоционална удовлетвореност):</strong>
+        <p style="margin: 5px 0 0 0;">Целта на темата „Успех“ е всяко дете да изпита радост от своето постижение. Хвалете децата както за точния мерник, така и за бързината. При комбинираните упражнения следете за правилната позиция на ръката над рамото по време на хвърлянето.</p>
+    </div>
+</div>
+
+<script>
+    let currentDegrees = 0;
+    
+    function spinWheel() {
+        const wheel = document.getElementById('lucky-wheel');
+        const resultText = document.getElementById('wheel-result');
+        
+        // Генерираме завъртане на поне 3-4 пълни оборота + произволен ъгъл
+        const randomSpin = Math.floor(Math.random() * 360) + 1440;
+        currentDegrees += randomSpin;
+        
+        // Завъртане чрез CSS
+        wheel.style.transform = `rotate(${currentDegrees}deg)`;
+        resultText.innerText = "Колелото се върти... Кое ще е предизвикателството?";
+        
+        setTimeout(() => {
+            // Изчисляваме сектора (всеки сектор е 90 градуса от conic-gradient)
+            const actualAngle = (360 - (currentDegrees % 360)) % 360;
+            let challenge = "";
+            
+            if (actualAngle >= 0 && actualAngle < 90) {
+                challenge = "🏃‍♂️ ЗАДАЧА: Бързо бягане в права посока до конуса за време!";
+            } else if (actualAngle >= 90 && actualAngle < 180) {
+                challenge = "🚀 ЗАДАЧА: Хвърляне на малката топка силно в далечина с една ръка!";
+            } else if (actualAngle >= 180 && actualAngle < 270) {
+                challenge = "🎯 ЗАДАЧА: Точен мерник! Хвърляне на топката във вертикалната цел (обръч)!";
+            } else {
+                challenge = "🏆 КОМБИНАЦИЯ: Бягай бързо напред, вземи топка и я хвърли над рамо!";
+            }
+            
+            resultText.innerHTML = `<strong>${challenge}</strong>`;
+        }, 3000); // съвпада с времето на анимацията в CSS
+    }
+</script>
+
+</body>
+</html>

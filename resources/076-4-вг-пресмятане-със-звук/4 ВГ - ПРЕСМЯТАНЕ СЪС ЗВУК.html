@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Математическа Битка: Събиране и Изваждане</title>
+    <style>
+        :root {
+            --p1-color: #2196F3;
+            --p2-color: #F44336;
+            --accent-red: #FF0000;
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif;
+            touch-action: none; background-color: #eee;
+        }
+
+        #game-container { display: flex; height: 100vh; width: 100vw; }
+
+        .player-side {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: space-around;
+            padding: 20px; transition: background-color 0.2s;
+        }
+
+        .blue-side { background-color: #E3F2FD; border-right: 5px solid var(--p1-color); }
+        .red-side { background-color: #FFEBEE; border-left: 5px solid var(--p2-color); }
+
+        .score { font-size: 3rem; font-weight: bold; color: #333; }
+        .avatar { font-size: 6rem; }
+
+        .task-card {
+            background: white; padding: 35px; border-radius: 30px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            font-size: 5rem; font-weight: bold; min-width: 280px;
+            text-align: center; display: flex; justify-content: center;
+            align-items: center; gap: 15px; user-select: none;
+        }
+
+        .ans-slot {
+            display: inline-block; min-width: 60px; height: 90px;
+            color: var(--accent-red); /* Ярко червен цвят за отговора */
+            border-bottom: 5px solid #ccc;
+        }
+
+        .controls {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; width: 95%; max-width: 400px;
+        }
+
+        button {
+            font-size: 3rem; padding: 18px 0; border: none;
+            border-radius: 20px; cursor: pointer; font-weight: bold;
+            box-shadow: 0 8px #bbb; touch-action: manipulation;
+        }
+
+        button:active { transform: translateY(4px); box-shadow: 0 4px #888; }
+        .btn-num { background-color: white; color: #333; }
+        .btn-clear { background-color: #ff5252; color: white; }
+        .btn-confirm { background-color: #4CAF50; color: white; }
+
+        #win-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 100; flex-direction: column;
+            align-items: center; justify-content: center; text-align: center;
+        }
+
+        #win-text { font-size: 4rem; font-weight: bold; margin-bottom: 30px; }
+        .restart-btn {
+            font-size: 3rem; padding: 25px 60px; background: #4CAF50;
+            color: white; border-radius: 50px; box-shadow: 0 10px #2E7D32;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- Играч 1: Кученце -->
+        <div class="player-side blue-side" id="p1-area">
+            <div class="score">Точки: <span id="p1-score">0</span></div>
+            <div class="avatar">🐶</div>
+            <div class="task-card">
+                <span id="p1-eq"></span><span class="ans-slot" id="p1-ans">?</span>
+            </div>
+            <div class="controls">
+                <button class="btn-num" onpointerdown="handleInput(1, '1')">1</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '2')">2</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '3')">3</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '4')">4</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '5')">5</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '6')">6</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '7')">7</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '8')">8</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '9')">9</button>
+                <button class="btn-clear" onpointerdown="clearInput(1)">😲</button>
+                <button class="btn-num" onpointerdown="handleInput(1, '0')">0</button>
+                <button class="btn-confirm" onpointerdown="checkAnswer(1)">😊</button>
+            </div>
+        </div>
+
+        <!-- Играч 2: Котенце -->
+        <div class="player-side red-side" id="p2-area">
+            <div class="score">Точки: <span id="p2-score">0</span></div>
+            <div class="avatar">🐱</div>
+            <div class="task-card">
+                <span id="p2-eq"></span><span class="ans-slot" id="p2-ans">?</span>
+            </div>
+            <div class="controls">
+                <button class="btn-num" onpointerdown="handleInput(2, '1')">1</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '2')">2</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '3')">3</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '4')">4</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '5')">5</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '6')">6</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '7')">7</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '8')">8</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '9')">9</button>
+                <button class="btn-clear" onpointerdown="clearInput(2)">😲</button>
+                <button class="btn-num" onpointerdown="handleInput(2, '0')">0</button>
+                <button class="btn-confirm" onpointerdown="checkAnswer(2)">😊</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-screen">
+        <div id="win-text"></div>
+        <button class="restart-btn" onclick="location.reload()">НОВА ИГРА</button>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1000, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        let scores = { 1: 0, 2: 0 };
+        let currentInputs = { 1: '', 2: '' };
+        let problems = { 1: {}, 2: {} };
+
+        function generateProblem() {
+            const isAdd = Math.random() > 0.5;
+            let a, b, ans;
+            if (isAdd) {
+                ans = Math.floor(Math.random() * 11);
+                a = Math.floor(Math.random() * (ans + 1));
+                b = ans - a;
+                return { text: `${a} + ${b} = `, ans: ans.toString() };
+            } else {
+                a = Math.floor(Math.random() * 11);
+                b = Math.floor(Math.random() * (a + 1));
+                ans = a - b;
+                return { text: `${a} - ${b} = `, ans: ans.toString() };
+            }
+        }
+
+        function updateUI(p) {
+            document.getElementById(`p${p}-eq`).textContent = problems[p].text;
+            document.getElementById(`p${p}-ans`).textContent = currentInputs[p] || '?';
+            document.getElementById(`p${p}-score`).textContent = scores[p];
+        }
+
+        function handleInput(p, val) {
+            // Добавяме цифрата
+            if (currentInputs[p].length < 2) {
+                currentInputs[p] += val;
+                updateUI(p);
+                
+                // Проверка на звука веднага при поставяне на цифрата
+                if (currentInputs[p] === problems[p].ans) {
+                    playSound('correct');
+                } else {
+                    // Ако въведената дотук цифра вече прави отговора невъзможен
+                    if (!problems[p].ans.startsWith(currentInputs[p])) {
+                        playSound('wrong');
+                    }
+                }
+            }
+        }
+
+        function clearInput(p) {
+            currentInputs[p] = '';
+            updateUI(p);
+        }
+
+        function checkAnswer(p) {
+            if (currentInputs[p] === problems[p].ans) {
+                scores[p]++;
+                if (scores[p] >= 10) {
+                    document.getElementById('win-text').innerHTML = `ПОБЕДИТЕЛ:<br>${p === 1 ? '🐶 КУЧЕНЦЕТО' : '🐱 КОТЕНЦЕТО'}`;
+                    document.getElementById('win-screen').style.display = 'flex';
+                } else {
+                    problems[p] = generateProblem();
+                    currentInputs[p] = '';
+                    updateUI(p);
+                }
+            } else {
+                playSound('wrong');
+                const area = document.getElementById(`p${p}-area`);
+                area.style.backgroundColor = '#ffcdd2';
+                setTimeout(() => { area.style.backgroundColor = p === 1 ? '#E3F2FD' : '#FFEBEE'; }, 300);
+                clearInput(p);
+            }
+        }
+
+        problems[1] = generateProblem();
+        problems[2] = generateProblem();
+        updateUI(1);
+        updateUI(2);
+    </script>
+</body>
+</html>
